@@ -1,0 +1,233 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  firstName     String
+  lastName      String
+  email         String         @unique
+  password      String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  chatMessages  ChatMessage[]
+  conversations Conversation[]
+  dataSources   DataSource[]
+  oauthTokens   OAuthToken[]
+}
+
+model DataSource {
+  id                 Int                  @id @default(autoincrement())
+  userId             Int
+  sourceType         String
+  accountId          String
+  accountName        String
+  currency           String
+  status             String               @default("active")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  syncStatus         String               @default("PENDING")
+  lastSyncedAt       DateTime?
+  managerId          String?
+  googleEmail        String?
+  adGroupMetrics     AdGroupMetrics[]
+  ageRangeMetrics    AgeRangeMetrics[]
+  campaignMetrics    CampaignMetrics[]
+  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceMetrics      DeviceMetrics[]
+  genderMetrics      GenderMetrics[]
+  incomeRangeMetrics IncomeRangeMetrics[]
+  keywordMetrics     KeywordMetrics[]
+  locationMetrics    LocationMetrics[]
+
+  @@unique([userId, sourceType, accountId, googleEmail])
+}
+
+model CampaignMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  campaignId      String
+  campaignName    String
+  status          String     @default("ENABLED")
+  date            DateTime
+  hour            Int        @default(0)
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, campaignId, date, hour])
+  @@index([dataSourceId, date, hour])
+}
+
+model AdGroupMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  adGroupId       String
+  adGroupName     String
+  campaignId      String
+  status          String     @default("ENABLED")
+  date            DateTime
+  hour            Int        @default(0)
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, adGroupId, date, hour])
+  @@index([dataSourceId, date, hour])
+}
+
+model KeywordMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  keywordId       String
+  keywordText     String
+  adGroupId       String
+  status          String     @default("ENABLED")
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, keywordId, date])
+  @@index([dataSourceId, date])
+}
+
+model GenderMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  gender          String
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, gender, date])
+  @@index([dataSourceId, date])
+}
+
+model AgeRangeMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  ageRange        String
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, ageRange, date])
+  @@index([dataSourceId, date])
+}
+
+model IncomeRangeMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  incomeRange     String
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, incomeRange, date])
+  @@index([dataSourceId, date])
+}
+
+model LocationMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  country         String
+  region          String?
+  city            String?
+  postalCode      String?
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, country, region, city, postalCode, date])
+  @@index([dataSourceId, date])
+}
+
+model DeviceMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  device          String
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  cost            Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, device, date])
+  @@index([dataSourceId, date])
+}
+
+model OAuthToken {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  provider     String
+  accessToken  String
+  refreshToken String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  email        String?
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, provider, email])
+}
+
+model Conversation {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  title     String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+
+
+model ChatMessage {
+  id             Int           @id @default(autoincrement())
+  userId         Int
+  conversationId Int?
+  role           String
+  content        String
+  createdAt      DateTime      @default(now())
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([conversationId])
+}
