@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleAdsApi } from 'google-ads-api';
+import { google } from 'googleapis';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 // Load credentials from SyncMaster.json
 import credentialsFile from '../../../../../../SyncMaster.json';
@@ -8,18 +10,14 @@ const credentials = credentialsFile.installed;
 
 export async function GET(request: NextRequest) {
     try {
-        // For now, get userId from query param (in production, use session)
+        // Extract userId from JWT token instead of query parameter
+        const userId = await getUserIdFromRequest(request);
+
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
         const managerId = searchParams.get('managerId');
         const email = searchParams.get('email');
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-        }
-
-        const uid = Number(userId);
-        console.log(`DEBUG [accounts]: userId=${uid}, email=${email}`);
+        console.log(`DEBUG [accounts]: userId=${userId}, email=${email}`);
 
         // Get stored tokens - prioritize searching by email if provided
         let tokenRecord;
@@ -28,7 +26,7 @@ export async function GET(request: NextRequest) {
                 tokenRecord = await (prisma as any).oAuthToken.findUnique({
                     where: {
                         userId_provider_email: {
-                            userId: uid,
+                            userId: userId,
                             provider: 'google',
                             email: email
                         },
@@ -38,7 +36,7 @@ export async function GET(request: NextRequest) {
                 // Fallback to most recent google token if no email specified
                 tokenRecord = await (prisma as any).oAuthToken.findFirst({
                     where: {
-                        userId: uid,
+                        userId: userId,
                         provider: 'google',
                     },
                     orderBy: { updatedAt: 'desc' }
@@ -50,35 +48,59 @@ export async function GET(request: NextRequest) {
         }
 
         if (!tokenRecord) {
-            // Check if there are ANY tokens for this user just to be sure
-            const anyTokens = await (prisma as any).oAuthToken.findMany({
-                where: { userId: uid }
-            });
-            console.log(`DEBUG [accounts]: No google token found. User has ${anyTokens.length} total tokens.`);
-
-            return NextResponse.json({
-                error: 'No OAuth tokens found',
-                debug: { userId: uid, provider: 'google', totalTokensForUser: anyTokens.length }
-            }, { status: 401 });
+            return NextResponse.json({ error: 'No OAuth tokens found' }, { status: 401 });
         }
 
-        console.log(`DEBUG [accounts]: Token found. Expires: ${tokenRecord.expiresAt}`);
+        // --- Token Refresh Logic ---
+        let accessToken = tokenRecord.accessToken;
+        const now = new Date();
+        const buffer = 5 * 60 * 1000; // 5 minute buffer
+
+        if (tokenRecord.expiresAt && (new Date(tokenRecord.expiresAt).getTime() - now.getTime() < buffer) && tokenRecord.refreshToken) {
+            console.log('DEBUG [accounts]: Token expired or expiring soon, attempting refresh...');
+            try {
+                const oauth2Client = new google.auth.OAuth2(
+                    credentials.client_id,
+                    credentials.client_secret,
+                    `${request.nextUrl.origin}/api/google/oauth/callback`
+                );
+                oauth2Client.setCredentials({
+                    refresh_token: tokenRecord.refreshToken
+                });
+
+                const { tokens } = await oauth2Client.refreshAccessToken();
+                accessToken = tokens.access_token!;
+
+                // Update DB
+                await (prisma as any).oAuthToken.update({
+                    where: { id: tokenRecord.id },
+                    data: {
+                        accessToken: tokens.access_token!,
+                        expiresAt: new Date(tokens.expiry_date!),
+                        updatedAt: new Date()
+                    }
+                });
+                console.log('DEBUG [accounts]: Token refreshed successfully.');
+            } catch (refreshErr: any) {
+                console.error('DEBUG [accounts]: Token refresh failed:', refreshErr.message);
+                // Continue anyway, maybe it still works
+            }
+        }
 
         // Initialize Google Ads API client
-        const client = new GoogleAdsApi({
+        const adsClient = new GoogleAdsApi({
             client_id: credentials.client_id,
             client_secret: credentials.client_secret,
             developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN || '',
         });
 
-        const accessToken = tokenRecord.accessToken;
         const accounts = [];
         let resourceNames = [];
 
         if (managerId) {
             // FETCH SUB-ACCOUNTS for a specific manager
             console.log('DEBUG: Fetching logic for managerId:', managerId);
-            const customer = client.Customer({
+            const customer = adsClient.Customer({
                 customer_id: managerId.replace(/-/g, ''),
                 refresh_token: tokenRecord.refreshToken,
             } as any);
@@ -113,18 +135,27 @@ export async function GET(request: NextRequest) {
         } else {
             // FETCH TOP-LEVEL ACCESSIBLE CUSTOMERS
             try {
-                const response = await client.listAccessibleCustomers(accessToken);
+                console.log('DEBUG [accounts]: Calling listAccessibleCustomers...');
+                const response = await adsClient.listAccessibleCustomers(accessToken);
                 resourceNames = (response as any).resource_names || (Array.isArray(response) ? response : []);
-                console.log('DEBUG: Found resource names:', resourceNames);
+                console.log(`DEBUG [accounts]: Found ${resourceNames.length} resource names:`, resourceNames);
             } catch (apiErr: any) {
-                console.error('API Error in listAccessibleCustomers:', apiErr);
+                console.error('API Error in listAccessibleCustomers:', apiErr.message);
+
+                // If it's a developer token error, we'll log it and continue to mock data
+                if (apiErr.message?.includes('DEVELOPER_TOKEN_NOT_APPROVED') || apiErr.message?.includes('DEVELOPER_TOKEN_PROHIBITED')) {
+                    console.error('CRITICAL: Google Ads Developer Token Issue detected.');
+                }
+
+                // Don't return 502 here, let it fall through to the mock data fallback below
+                console.log('DEBUG [accounts]: Live discovery failed, will proceed to mock fallback.');
             }
 
             // Fetch details for each customer ID
             for (const resourceName of resourceNames) {
                 try {
                     const cleanId = resourceName.split('/')[1];
-                    const customer = client.Customer({
+                    const customer = adsClient.Customer({
                         customer_id: cleanId,
                         refresh_token: tokenRecord.refreshToken,
                     });
@@ -201,6 +232,11 @@ export async function GET(request: NextRequest) {
         }
     } catch (error) {
         console.error('Google Ads accounts fetch error:', error);
+
+        // Return 401 for authentication errors
+        if (error instanceof Error && (error.message === 'Not authenticated' || error.message === 'Invalid token')) {
+            return NextResponse.json({ error: error.message }, { status: 401 });
+        }
 
         // Fallback to mock data if API fails
         const mockAccounts = [

@@ -90,13 +90,7 @@ const Header: React.FC<HeaderProps> = ({ pageName, extended, maxWidth, stationar
                 padding: '0 16px',
                 pointerEvents: 'auto' // Re-enable pointer events for content
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: 'var(--text-muted)', flexShrink: 0 }}>
-                    <Link href="/nexus" style={{ color: 'inherit', textDecoration: 'none' }}>
-                        MetricGraph
-                    </Link>
-                    <div style={{ fontSize: '12px', opacity: 0.5 }}>/</div>
-                    <span style={{ color: 'var(--text-main)', fontWeight: 500 }}>{pageName}</span>
-                </div>
+                {/* Breadcrumb removed for cleaner design */}
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, justifyContent: 'flex-end' }}>
                     {/* Search Bar */}

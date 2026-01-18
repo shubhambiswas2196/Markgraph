@@ -1,8 +1,8 @@
 import { GoogleAdsApi } from 'google-ads-api';
 import prisma from '@/lib/prisma';
+// Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../SyncMaster.json';
-
-const credentials = credentialsFile.installed;
+const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
 
 export async function getGoogleAdsClient() {
     return new GoogleAdsApi({
@@ -30,5 +30,6 @@ export async function getUserTokens(userId: string | number) {
     return {
         accessToken: tokenRecord.accessToken,
         refreshToken: tokenRecord.refreshToken,
+        expiresAt: tokenRecord.expiresAt,
     };
 }

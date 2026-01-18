@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleAdsApi } from 'google-ads-api';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 // Load credentials from SyncMaster.json
 import credentialsFile from '../../../../../../SyncMaster.json';
@@ -8,19 +9,21 @@ const credentials = credentialsFile.installed;
 
 export async function GET(request: NextRequest) {
     try {
+        // Extract userId from JWT token instead of query parameter
+        const userId = await getUserIdFromRequest(request);
+
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
         const accountId = searchParams.get('accountId');
 
-        if (!userId || !accountId) {
-            return NextResponse.json({ error: 'User ID and Account ID required' }, { status: 400 });
+        if (!accountId) {
+            return NextResponse.json({ error: 'Account ID required' }, { status: 400 });
         }
 
-        // Get stored tokens
+        // Get stored tokens for the authenticated user
         const tokenRecord = await (prisma as any).oAuthToken.findUnique({
             where: {
                 userId_provider: {
-                    userId: parseInt(userId),
+                    userId: userId,
                     provider: 'google',
                 },
             },
@@ -80,6 +83,11 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ campaigns: formattedCampaigns });
     } catch (error) {
         console.error('Google Ads campaigns fetch error:', error);
+
+        // Return 401 for authentication errors
+        if (error instanceof Error && (error.message === 'Not authenticated' || error.message === 'Invalid token')) {
+            return NextResponse.json({ error: error.message }, { status: 401 });
+        }
 
         // Fallback to mock data
         const mockCampaigns = [

@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowUp, Sparkles, User, Bot, Loader2, RotateCcw, ChevronDown, CheckCircle2, Globe, Copy, Check, Activity, Zap } from 'lucide-react';
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowUp, Sparkles, User, Bot, Loader2, RotateCcw, ChevronDown, CheckCircle2, Globe, Copy, Check, Activity, Zap, Sun, Moon, PlayCircle, FileSpreadsheet, XCircle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { useRouter } from 'next/navigation';
+import CreativeGallery from '@/components/CreativeGallery';
+import { useTheme } from '@/components/ThemeProvider';
+// DeepModeToggle import removed
+
+// Multi-Agent Toggle Component
+// MultiAgentToggle removed
+import { ThinkingAccordion } from '@/components/ThinkingAccordion';
+
 
 
 
@@ -19,6 +28,7 @@ interface ToolLog {
 interface SupervisorDecision {
     next: string;
     reasoning: string;
+    todo_list?: string[];
 }
 
 interface Message {
@@ -26,6 +36,11 @@ interface Message {
     content: string;
     toolLogs?: ToolLog[];
     supervisorDecision?: SupervisorDecision;
+    pendingApproval?: {
+        toolName: string;
+        description: string;
+        toolCall: any;
+    };
 }
 
 // Resource Icon component for Source summary
@@ -47,7 +62,7 @@ function SourceIcon({ name }: { name: string }) {
     }
 
     // Google Ads Branding
-    if (name === 'google-ads' || name === 'ADS_AGENT' || name.startsWith('get_')) {
+    if (name === 'google-ads' || name === 'ADS_AGENT' || (name.startsWith('get_') && !name.includes('meta'))) {
         return (
             <div style={{
                 width: '16px',
@@ -61,8 +76,23 @@ function SourceIcon({ name }: { name: string }) {
         );
     }
 
+    // Meta Ads Branding
+    if (name === 'meta-ads' || name === 'META_AGENT' || name.includes('meta')) {
+        return (
+            <div style={{
+                width: '16px',
+                height: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+            }}>
+                <img src="/meta-logo.png" alt="Meta" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </div>
+        );
+    }
+
     // Google Sheets Branding
-    if (name === 'google-sheets' || name === 'SHEETS_AGENT' || name === 'create_google_sheet') {
+    if (name === 'google-sheets' || name === 'SHEETS_AGENT' || name.includes('sheet') || name.includes('spreadsheet')) {
         return (
             <div style={{
                 width: '16px',
@@ -174,6 +204,84 @@ const TableRenderer = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
+// --- PERPLEXITY STYLE COMPONENTS ---
+
+function SourcesRow({ logs }: { logs?: ToolLog[] }) {
+    if (!logs || logs.length === 0) return null;
+
+    // Deduplicate sources by name
+    const uniqueSources = logs.reduce((acc: ToolLog[], current) => {
+        const x = acc.find(item => item.name === current.name);
+        if (!x) {
+            return acc.concat([current]);
+        } else {
+            return acc;
+        }
+    }, []);
+
+    // Filter mainly for data fetching tools
+    const relevantSources = uniqueSources.filter(s =>
+        !s.name.includes('harness') &&
+        !s.name.includes('planner')
+    );
+
+    if (relevantSources.length === 0) return null;
+
+    return (
+        <div style={{ marginBottom: '16px', animation: 'fadeIn 0.5s' }}>
+            <div style={{
+                fontSize: '11px',
+                fontWeight: 700,
+                color: 'var(--text-muted)',
+                marginBottom: '8px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+            }}>
+                <Globe size={12} /> Sources
+            </div>
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px'
+            }}>
+                {relevantSources.map((log, idx) => (
+                    <div key={idx} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '6px 10px',
+                        background: 'var(--bg-card)',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                        fontWeight: 500,
+                        color: 'var(--text-main)',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                        maxWidth: '200px'
+                    }}>
+                        <div style={{ width: '16px', height: '16px', flexShrink: 0 }}>
+                            <SourceIcon name={log.name} />
+                        </div>
+                        <span style={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
+                        }}>
+                            {log.name.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        </span>
+                        {log.input?.accountId && (
+                            <span style={{ fontSize: '10px', opacity: 0.6 }}>#{log.input.accountId.slice(-4)}</span>
+                        )}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 
 
 // Thinking Process Header & Sources Component
@@ -190,7 +298,7 @@ function ThinkingProcess({ logs, decision, isComplete = true }: { logs?: ToolLog
         } else if (!isComplete) {
             setIsExpanded(true);
         }
-    }, [isComplete]);
+    }, [isComplete, isExpanded]);
 
     // Streaming text effect for supervisor decision
     useEffect(() => {
@@ -463,15 +571,17 @@ function ThinkingProcess({ logs, decision, isComplete = true }: { logs?: ToolLog
 }
 
 export default function NexusAIPage() {
+    const { theme, toggleTheme } = useTheme();
     const [messages, setMessages] = useState<Message[]>([]); // Start empty for search-like feel
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeepMode, setIsDeepMode] = useState(true); // Always Deep Mode
+    const [isMultiAgent, setIsMultiAgent] = useState(false); // Disabled
     const [activeTool, setActiveTool] = useState<string | null>(null);
     const [userId, setUserId] = useState<number | null>(null);
 
 
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [user, setUser] = useState<{ firstName: string; lastName: string; email: string } | null>(null);
@@ -497,57 +607,60 @@ export default function NexusAIPage() {
     };
 
     // Fetch userId and user info on mount
-    useEffect(() => {
-        const fetchUser = async () => {
-            try {
-                const res = await fetch('/api/me');
-                if (res.ok) {
-                    const data = await res.json();
-                    setUserId(data.userId);
-                    // Set user data directly from /api/me
-                    if (data.firstName && data.lastName) {
-                        setUser({
-                            firstName: data.firstName,
-                            lastName: data.lastName,
-                            email: data.email
-                        });
-                    }
+    const fetchUser = useCallback(async () => {
+        try {
+            const res = await fetch('/api/me');
+            if (res.ok) {
+                const data = await res.json();
+                setUserId(data.userId);
+                // Set user data directly from /api/me
+                if (data.firstName && data.lastName) {
+                    setUser({
+                        firstName: data.firstName,
+                        lastName: data.lastName,
+                        email: data.email
+                    });
                 }
-            } catch (e) {
-                console.error('Failed to fetch user:', e);
             }
-        };
-        fetchUser();
+        } catch (e) {
+            console.error('Failed to fetch user:', e);
+        }
     }, []);
 
+    useEffect(() => {
+        fetchUser();
+    }, [fetchUser]);
 
+
+
+    const fetchSources = useCallback(async () => {
+        if (!userId) return;
+        try {
+            const res = await fetch(`/api/sources/status`);
+            const data = await res.json();
+
+            if (data.sources) {
+                const mapped = data.sources.map((s: any) => ({
+                    id: s.accountId,
+                    name: s.accountName,
+                    icon: s.sourceType === 'google-ads' ? <Activity size={14} /> :
+                        s.sourceType === 'meta-ads' ? <Activity size={14} style={{ color: '#1877F2' }} /> :
+                            <CheckCircle2 size={14} />,
+                    type: s.sourceType
+                }));
+                setDataSources(mapped);
+            }
+        } catch (e) {
+            console.error("Failed to fetch sources", e);
+        }
+    }, [userId]);
 
     // Populate data sources
     useEffect(() => {
-        const fetchSources = async () => {
-            if (!userId) return;
-            try {
-                const res = await fetch(`/api/sources/status?userId=${userId}`);
-                const data = await res.json();
-
-                if (data.sources) {
-                    const mapped = data.sources.map((s: any) => ({
-                        id: s.accountId,
-                        name: s.accountName,
-                        icon: s.sourceType === 'google-ads' ? <Activity size={14} /> : <CheckCircle2 size={14} />,
-                        type: s.sourceType
-                    }));
-                    setDataSources(mapped);
-                }
-            } catch (e) {
-                console.error("Failed to fetch sources", e);
-            }
-        };
-
         if (userId) {
             fetchSources();
         }
-    }, [userId]);
+    }, [userId, fetchSources]);
 
     const filteredSources = dataSources.filter(s =>
         s.name.toLowerCase().includes(mentionQuery.toLowerCase())
@@ -630,6 +743,77 @@ export default function NexusAIPage() {
         }
     };
 
+    // Handle approval decision (approve/reject)
+    const handleApprovalDecision = async (decision: 'approve' | 'reject') => {
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/nexus/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    messages: messages,
+                    // Assuming currentChatId is available in scope, or passed as an argument
+                    // For this example, I'll omit it as it's not defined in the provided context
+                    // chatId: currentChatId,
+                    approvalDecision: decision,
+                    mode: isDeepMode ? 'deep' : 'standard'
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to process approval');
+            }
+
+            // Clear pending approval and continue streaming
+            const reader = response.body?.getReader();
+            if (!reader) throw new Error('No response stream');
+
+            const decoder = new TextDecoder();
+            let buffer = '';
+            let accumulatedContent = '';
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try {
+                        const data = JSON.parse(line);
+
+                        if (data.type === 'text') {
+                            accumulatedContent += data.content;
+                            setMessages(prev => {
+                                const newMsgs = [...prev];
+                                // Update or add assistant message
+                                if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant') {
+                                    newMsgs[newMsgs.length - 1] = {
+                                        ...newMsgs[newMsgs.length - 1],
+                                        content: (newMsgs[newMsgs.length - 1].content || '') + data.content,
+                                        pendingApproval: undefined // Clear approval request
+                                    };
+                                }
+                                return newMsgs;
+                            });
+                        }
+                    } catch (e) {
+                        console.error('[Approval] Parse error:', e);
+                    }
+                }
+            }
+
+            setIsLoading(false);
+        } catch (error) {
+            console.error('[Approval] Error:', error);
+            setIsLoading(false);
+        }
+    };
+
     const handleSendMessage = async (e?: React.FormEvent, contentOverride?: string) => {
         e?.preventDefault();
         const msgContent = contentOverride || input;
@@ -657,25 +841,32 @@ export default function NexusAIPage() {
         try {
             // Context prep
             let activeAccountId = null;
+            let activeSourceType = null;
             let finalContent = msgContent;
 
             if (selectedSources.length > 0) {
                 const sourceNames = selectedSources.map(s => s.name);
                 const sourceIds = selectedSources.map(s => s.id);
-                if (sourceIds.length > 0) activeAccountId = sourceIds[0];
+                const sourceTypes = selectedSources.map(s => s.type);
+                if (sourceIds.length > 0) {
+                    activeAccountId = sourceIds[0];
+                    activeSourceType = sourceTypes[0];
+                }
                 finalContent = `[Sources: ${sourceNames.join(', ')}]\n\n${msgContent}`;
             }
 
             setSelectedSources([]);
 
-            // API Call
-            const response = await fetch('/api/nexus/chat', {
+            // API Call - Always use Deep Agent Chat
+            const apiEndpoint = '/api/nexus/chat';
+            const response = await fetch(apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     messages: [...messages, { ...userMessage, content: finalContent }],
-                    userId,
-                    accountId: activeAccountId
+                    accountId: activeAccountId,
+                    sourceType: activeSourceType,
+                    mode: 'deep'
                 }),
             });
 
@@ -711,16 +902,77 @@ export default function NexusAIPage() {
 
                         if (data.type === 'text') {
                             accumulatedContent += data.content;
+
+                            // Safety: Strip routing tokens (global replace, handles quotes)
+                            accumulatedContent = accumulatedContent.replace(/["']?(GOOGLE_ADS_AGENT|META_ADS_AGENT|SHEETS_AGENT)["']?\s*/g, '');
+                            // Safety: Strip raw tool calls leaking from small models
+                            accumulatedContent = accumulatedContent.replace(/<tool_call>[\s\S]*?<\/tool_call>/g, '');
+                            accumulatedContent = accumulatedContent.replace(/<function_call>[\s\S]*?<\/function_call>/g, '');
+                            accumulatedContent = accumulatedContent.replace(/<function=.*?>/g, '');
+
                             // Update UI
                             setMessages(prev => {
                                 const newMsgs = [...prev];
-                                const lastMsg = newMsgs[newMsgs.length - 1];
-                                if (lastMsg.role === 'assistant') {
-                                    lastMsg.content = accumulatedContent;
+                                if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant') {
+                                    newMsgs[newMsgs.length - 1] = {
+                                        ...newMsgs[newMsgs.length - 1],
+                                        content: accumulatedContent
+                                    };
+                                } else {
+                                    newMsgs.push({ role: 'assistant', content: accumulatedContent });
                                 }
                                 return newMsgs;
                             });
-                        } else if (data.type === 'tool_start') {
+                        }
+
+                        // Handle supervisor decisions (from multi-agent API)
+                        else if (data.type === 'supervisor_decision') {
+                            // If backend signals to clear content (e.g. removing routing tokens like "GOOGLE_ADS_AGENT")
+                            if (data.clearContent) {
+                                accumulatedContent = '';
+                            }
+
+                            setMessages(prev => {
+                                const newMsgs = [...prev];
+                                if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant') {
+                                    newMsgs[newMsgs.length - 1] = {
+                                        ...newMsgs[newMsgs.length - 1],
+                                        // If clearing, reset content
+                                        content: data.clearContent ? '' : newMsgs[newMsgs.length - 1].content,
+                                        supervisorDecision: {
+                                            next: data.next,
+                                            reasoning: data.reasoning,
+                                            todo_list: data.todo_list
+                                        }
+                                    };
+                                }
+                                return newMsgs;
+                            });
+                        }
+
+                        // Handle approval requests
+                        else if (data.type === 'approval_required') {
+                            console.log('[Frontend] Approval required:', data.approval);
+                            setMessages(prev => {
+                                const newMsgs = [...prev];
+                                if (newMsgs.length > 0 && newMsgs[newMsgs.length - 1].role === 'assistant') {
+                                    newMsgs[newMsgs.length - 1] = {
+                                        ...newMsgs[newMsgs.length - 1],
+                                        pendingApproval: data.approval
+                                    };
+                                } else {
+                                    newMsgs.push({
+                                        role: 'assistant',
+                                        content: accumulatedContent || '',
+                                        pendingApproval: data.approval
+                                    });
+                                }
+                                return newMsgs;
+                            });
+                            setIsLoading(false); // Stop loading indicator
+                        }
+
+                        else if (data.type === 'tool_start') {
                             const newLog: ToolLog = {
                                 name: data.tool,
                                 status: 'running',
@@ -789,6 +1041,43 @@ export default function NexusAIPage() {
 
     const hasMessages = messages.length > 0;
 
+    // Auto-scroll to the top of the latest interaction (Perplexity-style focus)
+    // Auto-scroll to the top of the latest interaction (Perplexity-style focus)
+    // This ensures the current Question + Answer are at the top of the viewport
+    useEffect(() => {
+        if (messages.length === 0) return;
+
+        const lastIdx = messages.length - 1;
+        const lastMsg = messages[lastIdx];
+
+        // Determine which message to focus on
+        // If user just sent a message: Focus on that message (It's the start of the interaction)
+        // If assistant is replying: Focus on the USER's message (Keep the context at the top)
+        let focusTargetIdx = lastIdx;
+
+        if (lastMsg.role === 'assistant' && lastIdx > 0) {
+            focusTargetIdx = lastIdx - 1;
+        }
+
+        const targetId = `msg-${focusTargetIdx}`;
+
+        // improved scroll logic with multiple attempts to handle layout shifts (Thinking accordion expansion etc)
+        const scrollToTarget = () => {
+            const el = document.getElementById(targetId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        };
+
+        // Attempt immediately and after short delays for layout stability
+        // The delays define how "aggressive" the snap is.
+        scrollToTarget();
+        setTimeout(scrollToTarget, 100);
+        setTimeout(scrollToTarget, 400);
+        setTimeout(scrollToTarget, 800); // Final verification snap
+
+    }, [messages.length]);
+
     return (
         <>
 
@@ -812,38 +1101,40 @@ export default function NexusAIPage() {
                     right: '20px',
                     zIndex: 100,
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                    alignItems: 'flex-end'
+                    alignItems: 'center',
+                    gap: '16px'
                 }}>
-                    <span style={{
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        color: 'var(--text-main)',
-                        opacity: 0.8
-                    }}>
-                        {user ? `${user.firstName} ${user.lastName}` : 'User'}
-                    </span>
-                    <span style={{
-                        fontSize: '12px',
-                        color: 'var(--text-muted)',
-                        opacity: 0.7
-                    }}>
-                        {user?.email || 'user@example.com'}
-                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                        <span style={{
+                            fontSize: '14px',
+                            fontWeight: 600,
+                            color: 'var(--text-main)',
+                            opacity: 0.8
+                        }}>
+                            {user ? `${user.firstName} ${user.lastName}` : 'User'}
+                        </span>
+                        <span style={{
+                            fontSize: '12px',
+                            color: 'var(--text-muted)',
+                            opacity: 0.7
+                        }}>
+                            {user?.email || 'user@example.com'}
+                        </span>
+                    </div>
                 </div>
 
                 {/* Chat Container */}
                 <div style={{
                     flex: 1,
                     overflowY: 'auto',
-                    padding: '80px 20px 180px', // Reduced top padding
+                    padding: '80px 20px 120px', // Reduced top padding, optimized bottom padding
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     scrollbarWidth: 'none',
                     opacity: hasMessages ? 1 : 0, // Hide chat list initially
                     transition: 'opacity 0.4s ease',
+                    scrollBehavior: 'smooth'
                 }}>
                     <div style={{
                         width: '100%',
@@ -853,14 +1144,18 @@ export default function NexusAIPage() {
                         gap: '24px',
                     }}>
                         {messages.map((msg, idx) => (
-                            <div key={idx} style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: idx === 0 ? '0' : '16px',
-                                animation: 'messageSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                                opacity: 1,
-                                alignItems: msg.role === 'user' ? 'flex-start' : 'stretch',
-                            }}>
+                            <div
+                                key={idx}
+                                id={`msg-${idx}`}
+                                style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: idx === 0 ? '0' : '16px',
+                                    animation: 'messageSlideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                                    opacity: 1,
+                                    alignItems: msg.role === 'user' ? 'flex-start' : 'stretch',
+                                    paddingTop: msg.role === 'user' ? '20px' : '0' // Extra spacing for focus
+                                }}>
                                 {msg.role === 'user' && (
                                     <div style={{
                                         fontSize: '20px',
@@ -877,77 +1172,316 @@ export default function NexusAIPage() {
                                 )}
 
                                 {msg.role === 'assistant' && (
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        {/* Persistent Thinking Process Header */}
-                                        <ThinkingProcess
-                                            logs={msg.toolLogs}
-                                            decision={msg.supervisorDecision}
-                                            isComplete={!isLoading || idx < messages.length - 1}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {/* Agent Identity Header (Meta) */}
+                                        {msg.supervisorDecision?.next === 'META_AGENT' && (
+                                            <div style={{
+                                                marginBottom: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(6, 104, 225, 0.05)',
+                                                border: '1px solid rgba(6, 104, 225, 0.15)',
+                                                borderRadius: '8px',
+                                                width: 'fit-content'
+                                            }}>
+                                                <img
+                                                    src="/meta-logo.png"
+                                                    alt="Meta Agent"
+                                                    style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                                />
+                                                <span style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    color: '#0668E1',
+                                                    letterSpacing: '0.3px'
+                                                }}>
+                                                    Meta Ads Specialist
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Agent Identity Header (Google) */}
+                                        {msg.supervisorDecision?.next === 'GOOGLE_AGENT' && (
+                                            <div style={{
+                                                marginBottom: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(66, 133, 244, 0.05)',
+                                                border: '1px solid rgba(66, 133, 244, 0.15)',
+                                                borderRadius: '8px',
+                                                width: 'fit-content'
+                                            }}>
+                                                <img
+                                                    src="/google_ads_logo.png"
+                                                    alt="Google Agent"
+                                                    style={{ width: '24px', height: '24px', objectFit: 'contain' }}
+                                                />
+                                                <span style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    color: '#4285F4',
+                                                    letterSpacing: '0.3px'
+                                                }}>
+                                                    Google Ads Specialist
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* Agent Identity Header (Sheets) */}
+                                        {msg.supervisorDecision?.next === 'SHEETS_AGENT' && (
+                                            <div style={{
+                                                marginBottom: '4px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '8px 12px',
+                                                background: 'rgba(15, 157, 88, 0.05)',
+                                                border: '1px solid rgba(15, 157, 88, 0.15)',
+                                                borderRadius: '8px',
+                                                width: 'fit-content'
+                                            }}>
+                                                <FileSpreadsheet size={24} style={{ color: '#0F9D58' }} />
+                                                <span style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    color: '#0F9D58',
+                                                    letterSpacing: '0.3px'
+                                                }}>
+                                                    Google Sheets Specialist
+                                                </span>
+                                            </div>
+                                        )}
+
+                                        {/* 0. THINKING PROCESS (Accordion) */}
+                                        <ThinkingAccordion
+                                            reasoning={msg.supervisorDecision?.reasoning || ''}
+                                            toolLogs={msg.toolLogs}
+                                            todoList={msg.supervisorDecision?.todo_list}
+                                            activeTool={idx === messages.length - 1 && isLoading ? activeTool : null}
+                                            isComplete={idx !== messages.length - 1 || !isLoading}
                                         />
 
-                                        <div style={{
-                                            fontSize: '16px',
-                                            fontWeight: 400,
-                                            lineHeight: '1.7',
-                                            color: 'var(--text-main)',
-                                            textAlign: 'left',
-                                            padding: '0'
-                                        }} className="markdown-content">
-                                            {(() => {
-                                                const { cleanedContent, questions } = extractFollowUpQuestions(msg.content);
-                                                return (
-                                                    <>
-                                                        <ReactMarkdown
-                                                            remarkPlugins={[remarkGfm]}
-                                                            components={{
-                                                                table: ({ children }) => <TableRenderer>{children}</TableRenderer>,
-                                                                thead: ({ children }) => <thead style={{ background: '#f8fafc' }}>{children}</thead>,
-                                                                th: ({ children }) => <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)' }}>{children}</th>,
-                                                                td: ({ children }) => <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)' }}>{children}</td>
-                                                            }}
-                                                        >
-                                                            {cleanedContent}
-                                                        </ReactMarkdown>
+                                        {/* 1. SOURCES Section */}
+                                        <SourcesRow logs={msg.toolLogs} />
 
 
-                                                        {questions.length > 0 && (
-                                                            <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                                                {questions.map((q, qIdx) => (
-                                                                    <button
-                                                                        key={qIdx}
-                                                                        onClick={() => handleSendMessage(undefined, q)}
-                                                                        disabled={isLoading}
-                                                                        style={{
-                                                                            padding: '8px 16px',
-                                                                            borderRadius: '20px',
-                                                                            border: '1px solid var(--border-color)',
-                                                                            background: 'white',
-                                                                            color: 'var(--primary-color)',
-                                                                            fontSize: '13px',
-                                                                            fontWeight: 500,
-                                                                            cursor: isLoading ? 'default' : 'pointer',
+
+                                        {/* 3. ANSWER Section - Clean and Focused */}
+                                        {msg.content && msg.content.trim().length > 0 && (
+                                            <div style={{
+                                                marginTop: '8px',
+                                                paddingTop: '16px',
+                                                borderTop: '1px solid var(--border-color)'
+                                            }}>
+                                                {/* "Answer" Label */}
+                                                <div style={{
+                                                    fontSize: '13px',
+                                                    fontWeight: 600,
+                                                    color: 'var(--text-muted)',
+                                                    marginBottom: '12px',
+                                                    textTransform: 'uppercase',
+                                                    letterSpacing: '0.5px'
+                                                }}>
+                                                    Answer
+                                                </div>
+
+                                                {/* Clean Answer Content */}
+                                                <div style={{
+                                                    fontSize: '16px',
+                                                    fontWeight: 400,
+                                                    lineHeight: '1.7',
+                                                    color: 'var(--text-main)',
+                                                    textAlign: 'left',
+                                                }} className="markdown-content">
+                                                    {(() => {
+                                                        const { cleanedContent, questions } = extractFollowUpQuestions(msg.content);
+                                                        return (
+                                                            <>
+                                                                <ReactMarkdown
+                                                                    remarkPlugins={[remarkGfm]}
+                                                                    components={{
+                                                                        table: ({ children }) => <TableRenderer>{children}</TableRenderer>,
+                                                                        thead: ({ children }) => <thead style={{ background: 'var(--bg-hover)' }}>{children}</thead>,
+                                                                        th: ({ children }) => <th style={{ padding: '12px 16px', textAlign: 'left', fontWeight: 600, borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-hover)' }}>{children}</th>,
+                                                                        td: ({ children }) => <td style={{ padding: '12px 16px', borderBottom: '1px solid var(--border-color)', color: 'var(--text-main)', background: 'var(--bg-color)' }}>{children}</td>,
+                                                                        code(props: any) {
+                                                                            const { children, className, node, ...rest } = props;
+                                                                            const match = /language-(\w+)/.exec(className || '');
+                                                                            const isGallery = match && match[1] === 'creative-gallery';
+
+                                                                            if (isGallery) {
+                                                                                try {
+                                                                                    const data = JSON.parse(String(children).replace(/\n$/, ''));
+                                                                                    return <CreativeGallery creatives={data} />;
+                                                                                } catch (e) {
+                                                                                    return <code {...rest} className={className}>{children}</code>;
+                                                                                }
+                                                                            }
+
+                                                                            return <code {...rest} className={className} style={{
+                                                                                backgroundColor: '#f1f5f9',
+                                                                                padding: '3px 8px',
+                                                                                borderRadius: '6px',
+                                                                                fontFamily: 'inherit',
+                                                                                fontWeight: 600,
+                                                                                color: 'var(--accent-color)',
+                                                                                border: '1px solid #e2e8f0'
+                                                                            }}>{children}</code>;
+                                                                        }
+                                                                    }}
+                                                                >
+                                                                    {cleanedContent.replace("[SYSTEM_ACTION:REQUEST_SHEET_PERMISSION]", "")}
+                                                                </ReactMarkdown>
+
+
+                                                                {msg.content.includes("[SYSTEM_ACTION:REQUEST_SHEET_PERMISSION]") && (
+                                                                    <div style={{ marginTop: '12px', padding: '16px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.05)', border: '1px dashed #6366f1', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                                        <p style={{ margin: 0, fontSize: '13px', color: '#1e1b4b', fontWeight: 600 }}>Action Required: Grant permission to create Google Sheet</p>
+                                                                        <button
+                                                                            onClick={() => handleSendMessage(undefined, "Yes, please proceed with creating the spreadsheet.")}
+                                                                            disabled={isLoading}
+                                                                            style={{
+                                                                                padding: '10px 20px',
+                                                                                borderRadius: '8px',
+                                                                                background: '#6366f1',
+                                                                                color: 'white',
+                                                                                border: 'none',
+                                                                                fontSize: '14px',
+                                                                                fontWeight: 600,
+                                                                                cursor: 'pointer',
+                                                                                display: 'flex',
+                                                                                alignItems: 'center',
+                                                                                justifyContent: 'center',
+                                                                                gap: '8px',
+                                                                                transition: 'all 0.2s'
+                                                                            }}
+                                                                        >
+                                                                            <PlayCircle size={18} />
+                                                                            Proceed with Spreadsheet Creation
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Approval UI for Google Sheets */}
+                                                                {msg.pendingApproval && (
+                                                                    <div style={{
+                                                                        marginTop: '16px',
+                                                                        padding: '16px',
+                                                                        borderRadius: '12px',
+                                                                        background: 'rgba(6, 182, 212, 0.05)',
+                                                                        border: '1px solid rgba(6, 182, 212, 0.2)',
+                                                                        display: 'flex',
+                                                                        flexDirection: 'column',
+                                                                        gap: '12px'
+                                                                    }}>
+                                                                        <div style={{
                                                                             display: 'flex',
                                                                             alignItems: 'center',
-                                                                            gap: '6px',
-                                                                            transition: 'all 0.2s',
-                                                                            opacity: isLoading ? 0.6 : 1
-                                                                        }}
-                                                                        className="action-btn"
-                                                                    >
-                                                                        <Sparkles size={14} />
-                                                                        {q}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
+                                                                            gap: '8px'
+                                                                        }}>
+                                                                            <FileSpreadsheet size={18} style={{ color: '#0891b2' }} />
+                                                                            <span style={{
+                                                                                fontSize: '14px',
+                                                                                fontWeight: 600,
+                                                                                color: 'var(--text-main)'
+                                                                            }}>
+                                                                                {msg.pendingApproval.description}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                                            <button
+                                                                                onClick={() => handleApprovalDecision('approve')}
+                                                                                disabled={isLoading}
+                                                                                style={{
+                                                                                    padding: '10px 20px',
+                                                                                    borderRadius: '8px',
+                                                                                    background: '#10b981',
+                                                                                    color: 'white',
+                                                                                    border: 'none',
+                                                                                    fontSize: '14px',
+                                                                                    fontWeight: 600,
+                                                                                    cursor: isLoading ? 'default' : 'pointer',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '6px',
+                                                                                    transition: 'all 0.2s',
+                                                                                    opacity: isLoading ? 0.6 : 1
+                                                                                }}
+                                                                            >
+                                                                                <CheckCircle2 size={16} />
+                                                                                Approve
+                                                                            </button>
+                                                                            <button
+                                                                                onClick={() => handleApprovalDecision('reject')}
+                                                                                disabled={isLoading}
+                                                                                style={{
+                                                                                    padding: '10px 20px',
+                                                                                    borderRadius: '8px',
+                                                                                    background: '#ef4444',
+                                                                                    color: 'white',
+                                                                                    border: 'none',
+                                                                                    fontSize: '14px',
+                                                                                    fontWeight: 600,
+                                                                                    cursor: isLoading ? 'default' : 'pointer',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '6px',
+                                                                                    transition: 'all 0.2s',
+                                                                                    opacity: isLoading ? 0.6 : 1
+                                                                                }}
+                                                                            >
+                                                                                <XCircle size={16} />
+                                                                                Reject
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {questions.length > 0 && (
+                                                                    <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                                        {questions.map((q, qIdx) => (
+                                                                            <button
+                                                                                key={qIdx}
+                                                                                onClick={() => handleSendMessage(undefined, q)}
+                                                                                disabled={isLoading}
+                                                                                style={{
+                                                                                    padding: '8px 16px',
+                                                                                    borderRadius: '20px',
+                                                                                    border: '1px solid var(--border-color)',
+                                                                                    background: 'white',
+                                                                                    color: 'var(--primary-color)',
+                                                                                    fontSize: '13px',
+                                                                                    fontWeight: 500,
+                                                                                    cursor: isLoading ? 'default' : 'pointer',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '6px',
+                                                                                    transition: 'all 0.2s',
+                                                                                    opacity: isLoading ? 0.6 : 1
+                                                                                }}
+                                                                                className="action-btn"
+                                                                            >
+                                                                                <Sparkles size={14} />
+                                                                                {q}
+                                                                            </button>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
                         ))}
+
 
                         {/* Active Status / Thinking - Perplexity Style */}
                         {isLoading && (
@@ -967,7 +1501,7 @@ export default function NexusAIPage() {
                                 </div>
                             </div>
                         )}
-                        <div ref={messagesEndRef} style={{ height: '40px' }} />
+                        <div style={{ minHeight: '20vh', width: '100%', flexShrink: 0 }} />
                     </div>
                 </div >
 
@@ -1001,27 +1535,32 @@ export default function NexusAIPage() {
                             color: 'var(--text-main)',
                             letterSpacing: '-0.02em'
                         }}>
-                            Marketing Agent
+                            Where knowledge begins
                         </h1>
                     </div >
 
 
                     <div
-                        className="nexus-input-glow"
+                        className={`nexus-input-glow ${isDeepMode ? 'deep-mode-active' : ''}`}
                         style={{
-                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            backdropFilter: 'blur(20px)',
-                            borderRadius: '24px', // Reduced radius
+                            backgroundColor: 'var(--bg-card)', /* Use CSS var everywhere to support dark mode */
+                            backdropFilter: 'blur(25px)',
+                            borderRadius: '24px',
                             position: 'relative',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.08)', // Adding slight shadow back for depth
+                            boxShadow: isDeepMode ? 'none' : '0 4px 20px rgba(0,0,0,0.08)',
                             padding: '2px',
                             display: 'flex',
                             flexDirection: 'column',
-                            transition: 'none',
+                            transition: 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
+                            border: isDeepMode ? '1.5px solid transparent' : '1px solid var(--border-color)'
                         }}>
+                        {/* Deep Mode Shimmer Effect (Simeydotme Wave) */}
+                        {isDeepMode && <span className="shimmer" />}
+
+                        {/* Deep Mode Toggle Moved Inside */}
                         {/* Inner Content Area */}
                         <div style={{
-                            backgroundColor: 'white',
+                            backgroundColor: 'var(--input-bg)', // Use variable
                             borderRadius: '22px', // Match outer
                             width: '100%',
                             height: '100%',
@@ -1044,7 +1583,7 @@ export default function NexusAIPage() {
                                     value={input}
                                     onChange={handleInput}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Ask anything... (Type @ for sources)"
+                                    placeholder="Ask a complex question for deep analysis..."
                                     disabled={isLoading}
                                     rows={1}
                                     style={{
@@ -1065,7 +1604,8 @@ export default function NexusAIPage() {
                                         transition: 'height 0.2s cubic-bezier(0.2, 0, 0.2, 1)' // Smooth height transition
                                     }}
                                 />
-                                <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px' }}>
+                                <div style={{ display: 'flex', gap: '8px', paddingBottom: '4px', alignItems: 'center' }}>
+
                                     {/* Premium Send Button */}
                                     <button
                                         onClick={() => handleSendMessage()}
@@ -1074,7 +1614,9 @@ export default function NexusAIPage() {
                                             height: '32px', // Smaller button
                                             width: '32px',
                                             borderRadius: '10px',
-                                            backgroundColor: (!input.trim() || isLoading) ? '#f1f5f9' : 'var(--primary-color)',
+                                            backgroundColor: (!input.trim() || isLoading)
+                                                ? '#f1f5f9'
+                                                : (isDeepMode ? '#e11d48' : 'var(--primary-color)'),
                                             color: 'white',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -1082,7 +1624,9 @@ export default function NexusAIPage() {
                                             border: 'none',
                                             cursor: (!input.trim() || isLoading) ? 'default' : 'pointer',
                                             transition: 'all 0.2s',
-                                            boxShadow: (!input.trim() || isLoading) ? 'none' : '0 2px 5px rgba(0, 136, 163, 0.3)',
+                                            boxShadow: (!input.trim() || isLoading)
+                                                ? 'none'
+                                                : (isDeepMode ? '0 2px 8px rgba(225, 29, 72, 0.4)' : '0 2px 5px rgba(0, 136, 163, 0.3)'),
                                         }}
                                     >
                                         {isLoading ? <Loader2 size={16} className="animate-spin" /> : <ArrowUp size={18} strokeWidth={2.5} />}
@@ -1119,44 +1663,7 @@ export default function NexusAIPage() {
                         )}
 
                         {/* Suggested Questions (Always render for transition) */}
-                        <div style={{
-                            display: 'flex',
-                            flexWrap: 'wrap',
-                            gap: '8px',
-                            justifyContent: 'center',
-                            padding: '0 20px',
-                            // Smooth fade and slide
-                            opacity: (!hasMessages && !input && selectedSources.length === 0) ? 1 : 0,
-                            transform: (!hasMessages && !input && selectedSources.length === 0) ? 'translateY(0)' : 'translateY(10px)',
-                            pointerEvents: (!hasMessages && !input && selectedSources.length === 0) ? 'auto' : 'none',
-                            transition: 'all 0.4s cubic-bezier(0.2, 0, 0.2, 1)',
-                            maxHeight: (!hasMessages && !input && selectedSources.length === 0) ? '200px' : '0px',
-                            overflow: 'hidden'
-                        }}>
-                            {["Analyze my campaign performance", "Why are conversions down?", "Top performing keywords", "Budget utilization"].map((q, i) => (
-                                <button
-                                    key={i}
-                                    onClick={() => setInput(q)}
-                                    style={{
-                                        pointerEvents: 'auto',
-                                        background: 'rgba(255, 255, 255, 0.8)',
-                                        backdropFilter: 'blur(10px)',
-                                        border: '1px solid var(--border-color)',
-                                        padding: '8px 16px',
-                                        borderRadius: '20px',
-                                        fontSize: '13px',
-                                        color: 'var(--text-main)',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                                    }}
-                                    className="action-btn"
-                                >
-                                    <span style={{ marginRight: '6px' }}>✨</span>
-                                    {q}
-                                </button>
-                            ))}
-                        </div>
+                        {/* Suggestions Removed as per user request */}
                     </div>
 
                     {/* Mentions Dropdown - Dynamic Positioning */}
@@ -1169,7 +1676,7 @@ export default function NexusAIPage() {
                             marginTop: !hasMessages ? '4px' : '0',
                             left: '0',
                             right: '0',
-                            background: 'white',
+                            background: 'var(--bg-card)', // Use variable
                             border: '1px solid var(--border-color)',
                             borderRadius: '16px',
                             boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
@@ -1184,7 +1691,7 @@ export default function NexusAIPage() {
                                 fontSize: '11px',
                                 fontWeight: 700,
                                 color: 'var(--text-muted)',
-                                background: '#f8fafc',
+                                background: 'var(--bg-sidebar)', // Use variable
                                 letterSpacing: '0.05em',
                                 borderBottom: '1px solid var(--border-color)'
                             }}>
@@ -1200,7 +1707,7 @@ export default function NexusAIPage() {
                                         style={{
                                             padding: '10px 16px',
                                             cursor: 'pointer',
-                                            background: idx === mentionIndex ? '#f1f5f9' : 'white',
+                                            background: idx === mentionIndex ? 'var(--border-color)' : 'var(--bg-card)', // Use variables
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '10px',
@@ -1265,6 +1772,11 @@ export default function NexusAIPage() {
                      box-shadow: 0 0 0 4px rgba(33, 188, 255, 0.1) !important;
                  }
 
+                 .nexus-input-glow.deep-mode-active:focus-within {
+                     border-color: #e11d48 !important;
+                     box-shadow: 0 0 0 4px rgba(225, 29, 72, 0.25) !important;
+                 }
+
                 /* Ensure text is readable above liquid */
                 .nexus-input-glow:focus-within input {
                     color: var(--text-main);
@@ -1320,7 +1832,7 @@ export default function NexusAIPage() {
                 /* Keep scrollbar clean */
                 ::-webkit-scrollbar { width: 0px; background: transparent; }
             `}</style>
-            </div>
+            </div >
         </>
     );
 }

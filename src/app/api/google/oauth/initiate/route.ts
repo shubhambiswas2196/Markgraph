@@ -1,28 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
+import { getUserIdFromRequest } from '@/lib/auth';
 
-// Load credentials from SyncMaster.json
+// Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../../../../../SyncMaster.json';
-const credentials = credentialsFile.installed;
+const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
 
 export async function GET(request: NextRequest) {
     try {
         console.log('OAuth initiation started');
+
+        // Extract userId from JWT token instead of query parameter
+        const userId = await getUserIdFromRequest(request);
+
         const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
         const isSwitch = searchParams.get('switch') === 'true';
 
-        console.log('UserId:', userId, 'Switch mod:', isSwitch);
+        console.log('UserId:', userId, 'Switch mode:', isSwitch);
         console.log('Credentials loaded:', {
             client_id: credentials.client_id ? 'present' : 'missing',
             client_secret: credentials.client_secret ? 'present' : 'missing',
             redirect_uris: credentials.redirect_uris
         });
-
-        if (!userId) {
-            console.log('No userId provided');
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-        }
 
         const redirectUri = `${request.nextUrl.origin}/api/google/oauth/callback`;
         console.log('Using redirect URI:', redirectUri);
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
         const authorizationUrl = oauth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: scopes,
-            state: userId, // Pass user ID in state
+            state: userId.toString(), // Pass user ID in state
             include_granted_scopes: true,
             prompt: isSwitch ? 'select_account' : undefined
         });
@@ -52,6 +51,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(authorizationUrl);
     } catch (error) {
         console.error('OAuth initiation error:', error);
+
+        // Return 401 for authentication errors
+        if (error instanceof Error && (error.message === 'Not authenticated' || error.message === 'Invalid token')) {
+            return NextResponse.json({ error: error.message }, { status: 401 });
+        }
+
         const err = error as Error;
         console.error('Error details:', {
             message: err.message,

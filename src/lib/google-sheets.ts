@@ -13,6 +13,8 @@ export function getGoogleOAuth2Client() {
 
 export async function createGoogleSheet(auth: any, title: string) {
     const sheets = google.sheets({ version: 'v4', auth });
+    const drive = google.drive({ version: 'v3', auth });
+
     const resource = {
         properties: {
             title,
@@ -23,9 +25,23 @@ export async function createGoogleSheet(auth: any, title: string) {
             requestBody: resource,
             fields: 'spreadsheetId,spreadsheetUrl',
         });
+
+        const spreadsheetId = spreadsheet.data.spreadsheetId;
+
+        // Make it public/editable
+        if (spreadsheetId) {
+            await drive.permissions.create({
+                fileId: spreadsheetId,
+                requestBody: {
+                    role: 'writer',
+                    type: 'anyone'
+                }
+            });
+        }
+
         return {
             status: 'success',
-            spreadsheetId: spreadsheet.data.spreadsheetId,
+            spreadsheetId: spreadsheetId,
             spreadsheetUrl: spreadsheet.data.spreadsheetUrl,
         };
     } catch (err: any) {

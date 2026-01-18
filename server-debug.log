@@ -1,0 +1,468 @@
+[2026-01-14T05:36:28.916Z] Error in sources/status: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+Stack: PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+    at tr (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:10:1379)
+    at qr.handleRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7815)
+    at qr.handleAndLogRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7467)
+    at qr.request (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7174)
+    at async a (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:75:5816)
+    at async GET (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:25)
+    at async AppRouteRouteModule.do (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:37789)
+    at async AppRouteRouteModule.handle (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:45045)
+    at async responseGenerator (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20570:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:187851)
+    at async handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20632:32)
+    at async handler (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20685:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1413:9)
+    at async DevServer.renderPageComponent (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1465:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1515:32)
+    at async DevServer.pipeImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1021:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:912:17)
+    at async C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:382:20
+    at async Span.traceAsyncFn (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:378:24)
+    at async invokeRender (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:436:24)
+    at async requestHandlerImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:484:13)
+    at async Server.requestListener (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\start-server.js:226:13)
+[2026-01-14T05:42:20.824Z] Error in sources/status: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+Stack: PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+    at tr (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:10:1379)
+    at qr.handleRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7815)
+    at qr.handleAndLogRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7467)
+    at qr.request (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7174)
+    at async a (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:75:5816)
+    at async GET (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:25)
+    at async AppRouteRouteModule.do (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:37789)
+    at async AppRouteRouteModule.handle (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:45045)
+    at async responseGenerator (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20570:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:187851)
+    at async handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20632:32)
+    at async handler (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20685:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1413:9)
+    at async DevServer.renderPageComponent (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1465:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1515:32)
+    at async DevServer.pipeImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1021:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:912:17)
+    at async C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:382:20
+    at async Span.traceAsyncFn (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:378:24)
+    at async invokeRender (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:436:24)
+    at async requestHandlerImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:484:13)
+    at async Server.requestListener (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\start-server.js:226:13)
+[2026-01-14T05:56:15.401Z] Error in sources/status: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+Stack: PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+    at tr (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:10:1379)
+    at qr.handleRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7815)
+    at qr.handleAndLogRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7467)
+    at qr.request (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7174)
+    at async a (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:75:5816)
+    at async GET (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:25)
+    at async AppRouteRouteModule.do (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:37789)
+    at async AppRouteRouteModule.handle (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:45045)
+    at async responseGenerator (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20570:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:187851)
+    at async handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20632:32)
+    at async handler (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20685:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1413:9)
+    at async DevServer.renderPageComponent (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1465:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1515:32)
+    at async DevServer.pipeImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1021:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:912:17)
+    at async C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:382:20
+    at async Span.traceAsyncFn (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:378:24)
+    at async invokeRender (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:436:24)
+    at async requestHandlerImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:484:13)
+    at async Server.requestListener (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\start-server.js:226:13)
+[2026-01-14T05:58:54.516Z] Error in sources/status: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+Stack: PrismaClientValidationError: 
+Invalid `__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany()` invocation in
+C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:172
+
+  181     }
+  182 });
+  183 // Get connected data sources
+→ 184 const sources = await __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$prisma$2e$ts__$5b$app$2d$route$5d$__$28$ecmascript$29$__["default"].dataSource.findMany({
+        where: {
+          userId: 2,
+          status: "active"
+        },
+        select: {
+          accountId: true,
+          accountName: true,
+          currency: true,
+          managerId: true,
+          googleEmail: true,
+          sourceType: true,
+          clientName: true,
+          ~~~~~~~~~~
+          status: true,
+      ?   id?: true,
+      ?   userId?: true,
+      ?   createdAt?: true,
+      ?   updatedAt?: true,
+      ?   syncStatus?: true,
+      ?   lastSyncedAt?: true,
+      ?   adGroupMetrics?: true,
+      ?   ageRangeMetrics?: true,
+      ?   campaignMetrics?: true,
+      ?   user?: true,
+      ?   deviceMetrics?: true,
+      ?   genderMetrics?: true,
+      ?   incomeRangeMetrics?: true,
+      ?   keywordMetrics?: true,
+      ?   locationMetrics?: true,
+      ?   metaCampaignMetrics?: true,
+      ?   metaAdSetMetrics?: true,
+      ?   metaAdMetrics?: true,
+      ?   metaDemographicMetrics?: true,
+      ?   _count?: true
+        }
+      })
+
+Unknown field `clientName` for select statement on model `DataSource`. Available options are marked with ?.
+    at tr (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:10:1379)
+    at qr.handleRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7815)
+    at qr.handleAndLogRequestError (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7467)
+    at qr.request (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:65:7174)
+    at async a (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\@prisma\client\runtime\client.js:75:5816)
+    at async GET (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\[root-of-the-server]__1e4b4313._.js:184:25)
+    at async AppRouteRouteModule.do (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:37789)
+    at async AppRouteRouteModule.handle (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:5:45045)
+    at async responseGenerator (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20570:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\compiled\next-server\app-route-turbo.runtime.dev.js:1:187851)
+    at async handleResponse (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20632:32)
+    at async handler (C:\Users\Shubham\Desktop\trm\Markgraph\.next\dev\server\chunks\node_modules_a7b3c2dc._.js:20685:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1413:9)
+    at async DevServer.renderPageComponent (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1465:24)
+    at async DevServer.renderToResponseImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1515:32)
+    at async DevServer.pipeImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:1021:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\base-server.js:912:17)
+    at async C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:382:20
+    at async Span.traceAsyncFn (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\dev\next-dev-server.js:378:24)
+    at async invokeRender (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:436:24)
+    at async requestHandlerImpl (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\router-server.js:484:13)
+    at async Server.requestListener (C:\Users\Shubham\Desktop\trm\Markgraph\node_modules\next\dist\server\lib\start-server.js:226:13)

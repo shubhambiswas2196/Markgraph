@@ -1,21 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
     try {
-        const { userId, accountId, accountIds, googleEmail } = await request.json();
+        // Extract userId from JWT token instead of request body
+        const userId = await getUserIdFromRequest(request);
 
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-        }
-
-        const uid = parseInt(userId);
+        const { accountId, accountIds, googleEmail } = await request.json();
 
         if (accountIds && Array.isArray(accountIds) && accountIds.length > 0) {
             // Bulk granular deletion
             await (prisma as any).dataSource.deleteMany({
                 where: {
-                    userId: uid,
+                    userId: userId,
                     accountId: { in: accountIds },
                     googleEmail: googleEmail !== undefined ? googleEmail : undefined
                 }
@@ -25,7 +23,7 @@ export async function POST(request: NextRequest) {
             // Single granular deletion
             await (prisma as any).dataSource.deleteMany({
                 where: {
-                    userId: uid,
+                    userId: userId,
                     accountId: accountId,
                     googleEmail: googleEmail !== undefined ? (googleEmail || '') : undefined
                 }
@@ -35,14 +33,14 @@ export async function POST(request: NextRequest) {
             // Legacy/Full disconnect: Delete OAuth tokens and all sources for Google
             await (prisma as any).oAuthToken.deleteMany({
                 where: {
-                    userId: uid,
+                    userId: userId,
                     provider: 'google'
                 }
             });
 
             await (prisma as any).dataSource.deleteMany({
                 where: {
-                    userId: uid,
+                    userId: userId,
                     sourceType: 'google-ads'
                 }
             });
@@ -51,6 +49,12 @@ export async function POST(request: NextRequest) {
         }
     } catch (error) {
         console.error('Disconnect error:', error);
+
+        // Return 401 for authentication errors
+        if (error instanceof Error && (error.message === 'Not authenticated' || error.message === 'Invalid token')) {
+            return NextResponse.json({ error: error.message }, { status: 401 });
+        }
+
         return NextResponse.json({ error: 'Failed to disconnect' }, { status: 500 });
     }
 }

@@ -4,48 +4,55 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
-  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  provider = "sqlite"
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  firstName     String
-  lastName      String
-  email         String         @unique
-  password      String
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  chatMessages  ChatMessage[]
-  conversations Conversation[]
-  dataSources   DataSource[]
-  oauthTokens   OAuthToken[]
+  id                    Int                   @id @default(autoincrement())
+  firstName             String
+  lastName              String
+  email                 String                @unique
+  password              String
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  chatMessages          ChatMessage[]
+  conversations         Conversation[]
+  dataSources           DataSource[]
+  oauthTokens           OAuthToken[]
+  userPreferences       UserPreference[]
+  campaignInsights      CampaignInsight[]
+  conversationSummaries ConversationSummary[]
+  agentActions          AgentAction[]
 }
 
 model DataSource {
-  id                 Int                  @id @default(autoincrement())
-  userId             Int
-  sourceType         String
-  accountId          String
-  accountName        String
-  currency           String
-  status             String               @default("active")
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  syncStatus         String               @default("PENDING")
-  lastSyncedAt       DateTime?
-  managerId          String?
-  googleEmail        String?
-  adGroupMetrics     AdGroupMetrics[]
-  ageRangeMetrics    AgeRangeMetrics[]
-  campaignMetrics    CampaignMetrics[]
-  user               User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  deviceMetrics      DeviceMetrics[]
-  genderMetrics      GenderMetrics[]
-  incomeRangeMetrics IncomeRangeMetrics[]
-  keywordMetrics     KeywordMetrics[]
-  locationMetrics    LocationMetrics[]
+  id                     Int                      @id @default(autoincrement())
+  userId                 Int
+  sourceType             String
+  accountId              String
+  accountName            String
+  currency               String
+  status                 String                   @default("active")
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  syncStatus             String                   @default("PENDING")
+  lastSyncedAt           DateTime?
+  clientName             String?
+  managerId              String?
+  googleEmail            String?
+  adGroupMetrics         AdGroupMetrics[]
+  ageRangeMetrics        AgeRangeMetrics[]
+  campaignMetrics        CampaignMetrics[]
+  user                   User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceMetrics          DeviceMetrics[]
+  genderMetrics          GenderMetrics[]
+  incomeRangeMetrics     IncomeRangeMetrics[]
+  keywordMetrics         KeywordMetrics[]
+  locationMetrics        LocationMetrics[]
+  metaCampaignMetrics    MetaCampaignMetrics[]
+  metaAdSetMetrics       MetaAdSetMetrics[]
+  metaAdMetrics          MetaAdMetrics[]
+  metaDemographicMetrics MetaDemographicMetrics[]
 
   @@unique([userId, sourceType, accountId, googleEmail])
 }
@@ -207,29 +214,185 @@ model OAuthToken {
 }
 
 model Conversation {
-  id        Int           @id @default(autoincrement())
-  userId    Int
-  title     String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  messages  ChatMessage[]
-  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                    Int                   @id @default(autoincrement())
+  userId                Int
+  title                 String
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt
+  messages              ChatMessage[]
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversationSummaries ConversationSummary[]
 
   @@index([userId])
 }
-
-
 
 model ChatMessage {
   id             Int           @id @default(autoincrement())
   userId         Int
   conversationId Int?
-  role           String
+  role           String // 'human', 'ai', 'tool'
   content        String
+  toolCalls      String? // JSON string of tool calls for AI messages
+  toolCallId     String? // Tool call ID for tool response messages
   createdAt      DateTime      @default(now())
   conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([conversationId])
+}
+
+// ============= META ADS METRICS TABLES =============
+
+model MetaCampaignMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  campaignId      String
+  campaignName    String
+  status          String     @default("ACTIVE")
+  objective       String?
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  spend           Float      @default(0)
+  reach           Int        @default(0)
+  frequency       Float      @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  ctr             Float      @default(0)
+  cpc             Float      @default(0)
+  cpm             Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, campaignId, date])
+  @@index([dataSourceId, date])
+}
+
+model MetaAdSetMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  adSetId         String
+  adSetName       String
+  campaignId      String
+  status          String     @default("ACTIVE")
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  spend           Float      @default(0)
+  reach           Int        @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, adSetId, date])
+  @@index([dataSourceId, date])
+}
+
+model MetaAdMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  adId            String
+  adName          String
+  adSetId         String
+  campaignId      String
+  status          String     @default("ACTIVE")
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  spend           Float      @default(0)
+  reach           Int        @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, adId, date])
+  @@index([dataSourceId, date])
+}
+
+model MetaDemographicMetrics {
+  id              Int        @id @default(autoincrement())
+  dataSourceId    Int
+  dimension       String // 'age', 'gender', 'country', 'region', 'device'
+  dimensionValue  String // e.g., '25-34', 'male', 'US', 'mobile'
+  date            DateTime
+  impressions     Int        @default(0)
+  clicks          Int        @default(0)
+  spend           Float      @default(0)
+  reach           Int        @default(0)
+  conversions     Int        @default(0)
+  conversionValue Float      @default(0)
+  dataSource      DataSource @relation(fields: [dataSourceId], references: [id], onDelete: Cascade)
+
+  @@unique([dataSourceId, dimension, dimensionValue, date])
+  @@index([dataSourceId, date])
+}
+
+// ============= MEMORY SYSTEM MODELS =============
+
+model UserPreference {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  category   String? // 'campaign', 'targeting', 'budget', 'reporting'
+  key        String
+  value      String
+  confidence Float    @default(1.0) // How confident we are (0-1)
+  source     String? // 'user_input', 'learned', 'inferred'
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, category, key])
+  @@index([userId, category])
+}
+
+model CampaignInsight {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  accountId    String?
+  sourceType   String? // 'google-ads', 'meta-ads'
+  insightType  String // 'performance', 'audience', 'timing', 'creative'
+  insight      String // "Weekends perform 40% better"
+  evidence     String? // JSON with supporting data
+  confidence   Float // 0-1 confidence score
+  impact       String? // 'high', 'medium', 'low'
+  actionable   Boolean   @default(true)
+  appliedCount Int       @default(0) // How many times we've used this
+  successRate  Float? // When applied, what % succeeded
+  createdAt    DateTime  @default(now())
+  lastApplied  DateTime?
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, sourceType, confidence])
+  @@index([userId, actionable, impact])
+}
+
+model ConversationSummary {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  userId         Int
+  summary        String
+  keyTopics      String? // JSON array of main topics
+  decisions      String? // JSON array of decisions made
+  messageRange   String? // "1-10", "11-20"
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@index([userId, createdAt])
+}
+
+model AgentAction {
+  id                 Int      @id @default(autoincrement())
+  userId             Int
+  agentName          String // 'ADS_AGENT', 'META_AGENT', 'SHEETS_AGENT'
+  actionType         String // 'campaign_created', 'bid_adjusted', 'insight_generated'
+  context            String? // JSON with relevant context
+  outcome            String? // 'success', 'failure', 'pending'
+  performanceMetrics String? // JSON with results
+  createdAt          DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, agentName, createdAt])
+  @@index([userId, outcome])
 }

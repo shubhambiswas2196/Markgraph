@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getUserIdFromRequest } from '@/lib/auth';
 import fs from 'fs';
 import path from 'path';
 
 export async function GET(request: NextRequest) {
     try {
-        const { searchParams } = new URL(request.url);
-        const userId = searchParams.get('userId');
-
-        if (!userId) {
-            return NextResponse.json({ error: 'User ID required' }, { status: 400 });
-        }
-
-        const uid = parseInt(userId);
+        // Extract userId from JWT token instead of query parameter
+        const userId = await getUserIdFromRequest(request);
 
         // Check for Google OAuth token
-        // Check for ANY Google OAuth token
         const token = await (prisma as any).oAuthToken.findFirst({
             where: {
-                userId: uid,
+                userId: userId,
                 provider: 'google',
             },
         });
@@ -26,7 +20,7 @@ export async function GET(request: NextRequest) {
         // Get connected data sources
         const sources = await (prisma as any).dataSource.findMany({
             where: {
-                userId: uid,
+                userId: userId,
                 status: 'active'
             },
             select: {
@@ -36,9 +30,12 @@ export async function GET(request: NextRequest) {
                 managerId: true,
                 googleEmail: true,
                 sourceType: true,
+                clientName: true,
                 status: true
             }
         });
+
+        console.log(`DEBUG [sources/status]: userId=${userId}, found ${sources?.length || 0} sources`);
 
         return NextResponse.json({
             isConnected: !!token || (sources && sources.length > 0),
@@ -46,6 +43,12 @@ export async function GET(request: NextRequest) {
         });
     } catch (error: any) {
         console.error('Status check error:', error);
+
+        // Return 401 for authentication errors
+        if (error.message === 'Not authenticated' || error.message === 'Invalid token') {
+            return NextResponse.json({ error: error.message }, { status: 401 });
+        }
+
         try {
             fs.writeFileSync(path.join(process.cwd(), 'server-debug.log'), `[${new Date().toISOString()}] Error in sources/status: ${error.message}\nStack: ${error.stack}\n`, { flag: 'a' });
         } catch (e) { console.error('Failed to write log', e); }

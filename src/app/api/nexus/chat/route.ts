@@ -1,42 +1,63 @@
 import { NextRequest } from 'next/server';
-import { nexusAgent } from '@/lib/nexus/agent';
-import { HumanMessage, SystemMessage, AIMessage } from '@langchain/core/messages';
+import { HumanMessage, AIMessage, SystemMessage } from '@langchain/core/messages';
+import { getUserIdFromRequest } from '@/lib/auth';
 
 export async function POST(request: NextRequest) {
     try {
+        // Extract userId from JWT token
+        const authenticatedUserId = await getUserIdFromRequest(request);
+
         const body = await request.json();
-        const { messages, userId, chatId, accountId, spreadsheetId } = body;
-        console.log("Nexus Chat Request:", { userId, chatId, messageCount: messages?.length });
+        const { messages, spreadsheetId, approvalDecision } = body;
 
         if (!messages || !Array.isArray(messages)) {
             return new Response(JSON.stringify({ error: 'Messages array is required' }), { status: 400 });
         }
 
-        // With MemorySaver, we only send the NEWEST message. 
-        // The checkpointer automatically restores the rest of the conversation.
-        const lastMsg = messages[messages.length - 1];
-        const langChainMessages = lastMsg.role === 'assistant'
-            ? [new AIMessage(lastMsg.content)]
-            : [new HumanMessage(lastMsg.content)];
+        // 1. REPLACED DB MEMORY WITH LANGCHAIN CONVERSATION BUFFER MEMORY
+        // We initialize the memory state from the request payload (stateless architecture)
+        const pastMessages = messages.slice(0, -1).map((m: any) =>
+            m.role === 'assistant' ? new AIMessage(m.content) :
+                m.role === 'tool' ? new HumanMessage(`[Tool Result]: ${m.content}`) : // Simplify tool results for buffer
+                    new HumanMessage(m.content)
+        );
 
-        // Use streamEvents with configurable context and thread_id
-        const eventStream = nexusAgent.streamEvents(
+        const historyMessages = pastMessages;
+
+        // Get the new user message
+        const lastMsg = messages[messages.length - 1];
+        const newUserMessage = new HumanMessage(lastMsg.content);
+
+        const allMessages = [...historyMessages, newUserMessage];
+
+        // Always use Deep Reasoning Agent
+        console.log("🚀 Engaging Deep Reasoning Agent (Stateless Mode)");
+        const { deepReasoningGraph } = await import('@/lib/nexus/deep-agent');
+
+        let eventStream = deepReasoningGraph.streamEvents(
             {
-                messages: langChainMessages,
-                accountId: accountId || undefined,
-                spreadsheetId: spreadsheetId || undefined
+                messages: allMessages,
+                plan: [],
+                todo_list: [],
+                subagent_reports: [],
+                currentStep: "START",
+                pendingPermission: approvalDecision === 'pending',
+                permissionGranted: approvalDecision === 'approved',
+                cachedToolResults: {},
+                spreadsheetId: spreadsheetId || ""
             },
             {
                 version: "v2",
-                recursionLimit: 100,
+                recursionLimit: 150,
                 configurable: {
-                    userId: userId || 0,
-                    thread_id: chatId || `user_${userId || 'guest'}`
+                    userId: authenticatedUserId,
+                    thread_id: `stateless_${authenticatedUserId}`
                 }
             } as any
         );
 
         const encoder = new TextEncoder();
+
         const readableStream = new ReadableStream({
             async start(controller) {
                 try {
@@ -57,14 +78,25 @@ export async function POST(request: NextRequest) {
                             }
                         }
 
-                        // 2. Capture Router/Supervisor Reasoning
-                        else if (eventType === "on_chain_end" && (event.name === "supervisor" || event.name === "router")) {
+                        // 2. Capture Router/Supervisor/Planner Reasoning
+                        else if (eventType === "on_chain_end" && (event.name === "supervisor" || event.name === "router" || event.name === "planner")) {
                             const output = event.data.output;
-                            if (output && output.next) {
+
+                            // Planner specific output
+                            if (event.name === "planner" && output?.plan) {
                                 controller.enqueue(encoder.encode(JSON.stringify({
                                     type: 'supervisor_decision',
-                                    next: output.next,
-                                    reasoning: output.reasoning
+                                    next: 'analyst',
+                                    reasoning: `**Plan Created:**\n${output.plan.join('\n')}`
+                                }) + '\n'));
+                            }
+                            // Supervisor/Router/Analyst output
+                            else if (output) {
+                                controller.enqueue(encoder.encode(JSON.stringify({
+                                    type: 'supervisor_decision',
+                                    next: output.next || (event.name === 'analyst' ? 'tools' : undefined),
+                                    reasoning: output.reasoning,
+                                    todo_list: output.todo_list
                                 }) + '\n'));
                             }
                         }
@@ -82,15 +114,23 @@ export async function POST(request: NextRequest) {
                                 output: event.data.output
                             }) + '\n'));
                         }
+
+                        // 4. Detect approval requests from state changes
+                        else if (eventType === "on_chain_end" && event.name === "approvalChecker") {
+                            const output = event.data.output;
+                            if (output?.pendingApproval) {
+                                console.log('[Chat API] Approval required detected');
+                                controller.enqueue(encoder.encode(JSON.stringify({
+                                    type: 'approval_required',
+                                    approval: output.pendingApproval
+                                }) + '\n'));
+                            }
+                        }
                     }
+
                     controller.close();
                 } catch (e: any) {
-                    console.error("Stream Error Detailed:", {
-                        message: e.message,
-                        status: e.status,
-                        headers: e.headers,
-                        errorData: e.error || e.data
-                    });
+                    console.error("Stream Error Detailed:", e);
                     controller.enqueue(encoder.encode(JSON.stringify({
                         type: 'error',
                         content: e.message,

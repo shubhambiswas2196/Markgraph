@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import prisma from '@/lib/prisma';
+import fs from 'fs';
+import path from 'path';
 
-// Load credentials from SyncMaster.json
+// Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../../../../../SyncMaster.json';
-const credentials = credentialsFile.installed;
+const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
 
 export async function GET(request: NextRequest) {
     try {
@@ -100,8 +102,6 @@ export async function GET(request: NextRequest) {
 
         // DEBUG: Write error to file
         try {
-            const fs = require('fs');
-            const path = require('path');
             const logPath = path.join(process.cwd(), 'auth-debug.log');
             const logData = JSON.stringify({
                 timestamp: new Date().toISOString(),
