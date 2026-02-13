@@ -37,7 +37,7 @@ model DataSource {
   updatedAt              DateTime                 @updatedAt
   syncStatus             String                   @default("PENDING")
   lastSyncedAt           DateTime?
-  clientName             String?
+  clientName             String? // Added to DataSource model
   managerId              String?
   googleEmail            String?
   adGroupMetrics         AdGroupMetrics[]

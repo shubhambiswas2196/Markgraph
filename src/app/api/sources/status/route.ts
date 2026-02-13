@@ -41,17 +41,20 @@ export async function GET(request: NextRequest) {
             isConnected: !!token || (sources && sources.length > 0),
             sources: sources || []
         });
-    } catch (error: any) {
-        console.error('Status check error:', error);
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorStack = error instanceof Error ? error.stack : '';
+
+        console.error('Status check error:', errorMessage);
 
         // Return 401 for authentication errors
-        if (error.message === 'Not authenticated' || error.message === 'Invalid token') {
-            return NextResponse.json({ error: error.message }, { status: 401 });
+        if (errorMessage === 'Not authenticated' || errorMessage === 'Invalid token') {
+            return NextResponse.json({ error: errorMessage }, { status: 401 });
         }
 
         try {
-            fs.writeFileSync(path.join(process.cwd(), 'server-debug.log'), `[${new Date().toISOString()}] Error in sources/status: ${error.message}\nStack: ${error.stack}\n`, { flag: 'a' });
+            fs.writeFileSync(path.join(process.cwd(), 'server-debug.log'), `[${new Date().toISOString()}] Error in sources/status: ${errorMessage}\nStack: ${errorStack}\n`, { flag: 'a' });
         } catch (e) { console.error('Failed to write log', e); }
-        return NextResponse.json({ error: 'Internal server error: ' + error.message }, { status: 500 });
+        return NextResponse.json({ error: 'Internal server error: ' + errorMessage }, { status: 500 });
     }
 }
