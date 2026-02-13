@@ -26,19 +26,21 @@ interface MetaInsightsParams {
  */
 export async function getMetaAdAccounts(accessToken: string): Promise<MetaAdAccount[]> {
     try {
-        const response = await fetch(
-            `${META_BASE_URL}/me/adaccounts?fields=id,name,account_id,currency,account_status&access_token=${accessToken}`
-        );
+        const url = `${META_BASE_URL}/me/adaccounts?fields=id,name,account_id,currency,account_status&access_token=${accessToken}`;
+        console.log(`[Meta Ads] Fetching ad accounts: ${url.replace(accessToken, 'REDACTED')}`);
+
+        const response = await fetch(url);
 
         if (!response.ok) {
             const error = await response.json();
+            console.error('[Meta Ads] API ERROR (accounts):', JSON.stringify(error, null, 2));
             throw new Error(`Meta API Error: ${error.error?.message || 'Unknown error'}`);
         }
 
         const data = await response.json();
         return data.data || [];
     } catch (error: any) {
-        console.error('[Meta Ads] Error fetching ad accounts:', error);
+        console.error('[Meta Ads] Exception in getMetaAdAccounts:', error.message);
         throw error;
     }
 }
@@ -71,17 +73,20 @@ export async function getMetaInsights(
         }
 
         const url = `${META_BASE_URL}/${accountId}/insights?${queryParams.toString()}`;
+        console.log(`[Meta Ads] Fetching insights: ${url.replace(accessToken, 'REDACTED')}`);
+
         const response = await fetch(url);
 
         if (!response.ok) {
             const error = await response.json();
+            console.error('[Meta Ads] API ERROR (insights):', JSON.stringify(error, null, 2));
             throw new Error(`Meta API Error: ${error.error?.message || 'Unknown error'}`);
         }
 
         const data = await response.json();
         return data.data || [];
     } catch (error: any) {
-        console.error('[Meta Ads] Error fetching insights:', error);
+        console.error('[Meta Ads] Exception in getMetaInsights:', error.message);
         throw error;
     }
 }

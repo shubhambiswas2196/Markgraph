@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
         }
 
         console.log('[Meta OAuth] Verifying user exists...');
-        const user = await (prisma as any).user.findUnique({
+        const user = await prisma.user.findUnique({
             where: { id: userId }
         });
 
@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         
         // Store ad accounts in DataSource table
         for (const account of accounts) {
-            await (prisma as any).dataSource.upsert({
+            await prisma.dataSource.upsert({
                 where: {
                     userId_sourceType_accountId_googleEmail: {
                         userId: userId,

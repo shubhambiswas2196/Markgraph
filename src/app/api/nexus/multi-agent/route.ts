@@ -1,3 +1,4 @@
+import { NextRequest } from 'next/server';
 import { HumanMessage, AIMessage, BaseMessage } from '@langchain/core/messages';
 import { getUserIdFromRequest } from '@/lib/auth';
 import { multiAgentGraph } from '@/lib/nexus/multi-agent';

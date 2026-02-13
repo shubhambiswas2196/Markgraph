@@ -2,7 +2,14 @@ import { GoogleAdsApi } from 'google-ads-api';
 import prisma from '@/lib/prisma';
 // Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../SyncMaster.json';
-const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
+import type { SyncMasterConfig } from '@/types/syncmaster';
+
+const typedCredentials = credentialsFile as SyncMasterConfig;
+const credentials = typedCredentials.web || typedCredentials.installed;
+
+if (!credentials) {
+    throw new Error('Invalid SyncMaster.json configuration: missing web or installed credentials');
+}
 
 export async function getGoogleAdsClient() {
     return new GoogleAdsApi({
@@ -13,7 +20,7 @@ export async function getGoogleAdsClient() {
 }
 
 export async function getUserTokens(userId: string | number) {
-    const tokenRecord = await (prisma as any).oAuthToken.findFirst({
+    const tokenRecord = await prisma.oAuthToken.findFirst({
         where: {
             userId: typeof userId === 'string' ? parseInt(userId) : userId,
             provider: 'google',

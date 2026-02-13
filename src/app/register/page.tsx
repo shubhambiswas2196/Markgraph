@@ -40,7 +40,7 @@ export default function RegisterPage() {
             } else {
                 setToast({ message: data.error || 'Something went wrong', type: 'error' });
             }
-        } catch (err) {
+        } catch {
             setToast({ message: 'Failed to connect to server', type: 'error' });
         } finally {
             setLoading(false);

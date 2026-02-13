@@ -45,55 +45,6 @@ export const getSystemTimezone = tool(
     }
 );
 
-// Memory & Performance Tools for Data Analytics Agent
-export const getMemoryUsage = tool(
-    async () => {
-        // Node.js memory usage
-        const memUsage = process.memoryUsage();
-        const rss = (memUsage.rss / 1024 / 1024).toFixed(2);
-        const heapTotal = (memUsage.heapTotal / 1024 / 1024).toFixed(2);
-        const heapUsed = (memUsage.heapUsed / 1024 / 1024).toFixed(2);
-        const external = (memUsage.external / 1024 / 1024).toFixed(2);
-
-        return `Memory Usage (MB):
-- RSS: ${rss} MB (Resident Set Size)
-- Heap Total: ${heapTotal} MB
-- Heap Used: ${heapUsed} MB
-- External: ${external} MB
-- Heap Usage: ${((parseFloat(heapUsed) / parseFloat(heapTotal)) * 100).toFixed(1)}%`;
-    },
-    {
-        name: 'get_memory_usage',
-        description: 'Get current system memory usage statistics',
-        schema: z.object({})
-    }
-);
-
-export const getPerformanceStats = tool(
-    async () => {
-        const uptime = process.uptime();
-        const cpuUsage = process.cpuUsage();
-        const loadAvg = require('os').loadavg ? require('os').loadavg() : [0, 0, 0];
-
-        const uptimeHours = Math.floor(uptime / 3600);
-        const uptimeMinutes = Math.floor((uptime % 3600) / 60);
-        const uptimeSeconds = Math.floor(uptime % 60);
-
-        return `Performance Statistics:
-- System Uptime: ${uptimeHours}h ${uptimeMinutes}m ${uptimeSeconds}s
-- CPU User Time: ${(cpuUsage.user / 1000000).toFixed(2)}s
-- CPU System Time: ${(cpuUsage.system / 1000000).toFixed(2)}s
-- Load Average (1m, 5m, 15m): ${loadAvg.map((avg: number) => avg.toFixed(2)).join(', ')}
-- Node.js Version: ${process.version}
-- Platform: ${process.platform}`;
-    },
-    {
-        name: 'get_performance_stats',
-        description: 'Get system performance statistics including uptime and CPU usage',
-        schema: z.object({})
-    }
-);
-
 // Date/Time Formatting Tools for Content Creation Agent
 export const formatDateTime = tool(
     async ({ date, format }) => {
@@ -194,5 +145,5 @@ Business days exclude Saturdays and Sundays.`;
 
 // Export tool collections for each agent
 export const supervisorUtilityTools = [getCurrentTime, getSystemTimezone];
-export const dataAnalyticsUtilityTools = [getMemoryUsage, getPerformanceStats];
 export const contentCreationUtilityTools = [formatDateTime, getBusinessDays];
+export const utilityTools = [...supervisorUtilityTools, ...contentCreationUtilityTools];

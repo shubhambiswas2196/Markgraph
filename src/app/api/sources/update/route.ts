@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Find the source first to get the correct googleEmail value
-        const source = await (prisma as any).dataSource.findFirst({
+        const source = await prisma.dataSource.findFirst({
             where: {
                 userId,
                 accountId,
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
         console.log('[Source Update API] Found source:', source);
 
         // Update using the source's ID (most reliable)
-        const updated = await (prisma as any).dataSource.update({
+        const updated = await prisma.dataSource.update({
             where: { id: source.id },
             data: { clientName: clientName || null }
         });

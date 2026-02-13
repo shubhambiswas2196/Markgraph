@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
     try {
         const userId = await getUserIdFromRequest(request);
 
-        const tokenRecord = await (prisma as any).oAuthToken.findFirst({
+        const tokenRecord = await prisma.oAuthToken.findFirst({
             where: {
                 userId,
                 provider: 'meta',

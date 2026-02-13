@@ -1,0 +1,24 @@
+
+> temp-app@0.1.0 build
+> next build
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 15.3s
+   Running TypeScript ...
+Failed to compile.
+
+./src/app/sources/page.tsx:922:33
+Type error: An object literal cannot have multiple properties with the same name.
+
+[0m [90m 920 |[39m                                 boxShadow[33m:[39m viewMode [33m===[39m [32m'platform'[39m [33m?[39m [32m'var(--shadow-sm)'[39m [33m:[39m [32m'none'[39m[33m,[39m
+ [90m 921 |[39m                                 transition[33m:[39m [32m'all 0.2s'[39m[33m,[39m
+[31m[1m>[22m[39m[90m 922 |[39m                                 border[33m:[39m viewMode [33m===[39m [32m'platform'[39m [33m?[39m [32m'1px solid var(--border-color)'[39m [33m:[39m [32m'none'[39m
+ [90m     |[39m                                 [31m[1m^[22m[39m
+ [90m 923 |[39m                             }}
+ [90m 924 |[39m                         [33m>[39m
+ [90m 925 |[39m                             [33mPlatform[39m [33mView[39m[0m
+Next.js build worker exited with code: 1 and signal: null

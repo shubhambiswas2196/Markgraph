@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
         // Extract userId from JWT token instead of query parameter
         const userId = await getUserIdFromRequest(request);
 
-        const token = await (prisma as any).oAuthToken.findFirst({
+        const token = await prisma.oAuthToken.findFirst({
             where: {
                 userId: userId,
                 provider: 'google'

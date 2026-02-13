@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get stored tokens for the authenticated user
-        const tokenRecord = await (prisma as any).oAuthToken.findUnique({
+        const tokenRecord = await prisma.oAuthToken.findUnique({
             where: {
                 userId_provider: {
                     userId: userId,

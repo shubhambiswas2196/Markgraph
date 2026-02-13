@@ -106,7 +106,7 @@ export async function getLongLivedToken(
  * Retrieve Meta OAuth tokens for a user from the database
  */
 export async function getUserMetaTokens(userId: string | number) {
-    const tokenRecord = await (prisma as any).oAuthToken.findFirst({
+    const tokenRecord = await prisma.oAuthToken.findFirst({
         where: {
             userId: typeof userId === 'string' ? parseInt(userId) : userId,
             provider: 'meta',
@@ -157,7 +157,7 @@ export async function storeMetaTokens(
 ) {
     const expiresAt = new Date(Date.now() + expiresIn * 1000);
 
-    await (prisma as any).oAuthToken.upsert({
+    await prisma.oAuthToken.upsert({
         where: {
             userId_provider_email: {
                 userId,

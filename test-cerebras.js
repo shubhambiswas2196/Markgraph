@@ -1,29 +1,32 @@
-const apiKey = 'csk-89p9xe4h9d6xrj396m5djf3x9368mmthrn2f6658chpx8xm2';
-const model = 'qwen-3-235b-a22b-instruct-2507';
+const { OpenAI } = require('openai');
 
-async function testCerebras() {
-    console.log('Testing Cerebras API...');
+async function testCerebrasTools() {
+    const client = new OpenAI({
+        apiKey: 'csk-phdxkjw3k5964njvxcfw46npx9n6yhp9vn4fdyd34tpf4cvt',
+        baseURL: 'https://api.cerebras.ai/v1'
+    });
+
+    const tools = [{
+        type: "function",
+        function: {
+            name: "get_weather",
+            description: "Get the weather",
+            parameters: { type: "object", properties: { location: { type: "string" } } }
+        }
+    }];
+
+    console.log("Testing Cerebras tool calling with model: llama3.1-8b...");
     try {
-        const response = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: model,
-                messages: [
-                    { role: 'user', content: 'Say hello!' }
-                ]
-            })
+        const response = await client.chat.completions.create({
+            model: 'llama3.1-8b',
+            messages: [{ role: 'user', content: 'What is the weather in London?' }],
+            tools: tools,
+            tool_choice: "auto"
         });
-
-        console.log('Status:', response.status);
-        const data = await response.json();
-        console.log('Response:', JSON.stringify(data, null, 2));
+        console.log("Response:", JSON.stringify(response.choices[0].message, null, 2));
     } catch (err) {
-        console.error('Test Failed:', err);
+        console.error("Cerebras Tool Test Error:", err.message);
     }
 }
 
-testCerebras();
+testCerebrasTools();

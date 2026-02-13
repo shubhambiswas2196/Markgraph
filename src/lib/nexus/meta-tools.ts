@@ -14,9 +14,9 @@ export const get_meta_account_overview = tool(
         if (userId === undefined || userId === null) return "Error: User ID not found.";
         try {
             // 1. Try fetching from database first
-            const sources = await (prisma as any).dataSource.findMany({
+            const sources = await prisma.dataSource.findMany({
                 where: { userId: Number(userId), sourceType: 'meta-ads', status: 'active' },
-                select: { accountId: true, accountName: true, currency: true, clientName: true }
+                select: { accountId: true, accountName: true, currency: true }
             });
             console.log(`[get_meta_account_overview] DB Sources found: ${sources?.length}`);
 
@@ -31,7 +31,7 @@ export const get_meta_account_overview = tool(
             console.log(`[get_meta_account_overview] Live discovery found: ${accounts.length}`);
 
             if (accounts.length === 0) {
-                return "No connected Meta Ads accounts found in database or via live discovery.";
+                return "No connected Meta Ads accounts found. Please go to the [Data Sources](/sources) page to connect your Meta Ads account so I can analyze your performance.";
             }
 
             return JSON.stringify(accounts);
@@ -52,7 +52,7 @@ export const get_meta_performance_data = tool(
         if (userId === undefined || userId === null) return "Error: User ID not found in configuration.";
 
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: {
                     userId: Number(userId),
                     sourceType: 'meta-ads',
@@ -63,7 +63,7 @@ export const get_meta_performance_data = tool(
             if (!source) return `Meta account ${accountId} not found in database. Please call get_meta_account_overview to verify your connected accounts.`;
 
             // Check if any historical data exists for this source
-            const dataCount = await (prisma as any).metaCampaignMetrics.count({
+            const dataCount = await prisma.metaCampaignMetrics.count({
                 where: { dataSourceId: source.id }
             });
 
@@ -104,19 +104,19 @@ export const get_meta_performance_data = tool(
 
             let rawResults;
             if (groupBy === 'campaign') {
-                rawResults = await (prisma as any).metaCampaignMetrics.groupBy({
+                rawResults = await prisma.metaCampaignMetrics.groupBy({
                     by: ['campaignName'],
                     where: queryWhere,
                     _sum: selectMetrics
                 });
             } else if (groupBy === 'date') {
-                rawResults = await (prisma as any).metaCampaignMetrics.groupBy({
+                rawResults = await prisma.metaCampaignMetrics.groupBy({
                     by: ['date'],
                     where: queryWhere,
                     _sum: selectMetrics
                 });
             } else {
-                rawResults = await (prisma as any).metaCampaignMetrics.aggregate({
+                rawResults = await prisma.metaCampaignMetrics.aggregate({
                     where: queryWhere,
                     _sum: selectMetrics
                 });
@@ -172,9 +172,17 @@ export const get_live_meta_ads_data = tool(
             const tokens = await getUserMetaTokens(userId);
             console.log(`[get_live_meta_ads_data] Tokens retrieved`);
 
-            const fields = ['campaign_name', 'impressions', 'clicks', 'spend', 'reach', 'frequency', 'unique_clicks', 'inline_link_clicks', 'actions', 'action_values'];
-            // If breakdowns are requested, we might get multiple rows per campaign/adset
-            // Dimensions will be returned in the response (e.g., 'age', 'gender')
+            // 2. Adjust fields based on level (Meta is strict: campaign_name only works at level='campaign')
+            const fields = ['impressions', 'clicks', 'spend', 'reach', 'frequency', 'unique_clicks', 'inline_link_clicks', 'actions', 'action_values'];
+            if (level === 'campaign') {
+                fields.push('campaign_name');
+            } else if (level === 'adset') {
+                fields.push('adset_name');
+            } else if (level === 'ad') {
+                fields.push('ad_name', 'adset_name', 'campaign_name');
+            }
+
+            console.log(`[get_live_meta_ads_data] Fetching insights for level: ${level}, fields: ${fields.length}`);
 
             const insights = await getMetaInsights(tokens.accessToken, {
                 accountId,
@@ -188,7 +196,9 @@ export const get_live_meta_ads_data = tool(
 
             const results = insights.map((row: any) => {
                 const item: any = {
-                    campaignName: row.campaign_name || 'N/A',
+                    campaignName: row.campaign_name || row.campaign_id || 'N/A',
+                    adsetName: row.adset_name || row.adset_id || 'N/A',
+                    adName: row.ad_name || row.ad_id || 'N/A',
                     impressions: parseInt(row.impressions || 0),
                     clicks: parseInt(row.clicks || 0),
                     uniqueClicks: parseInt(row.unique_clicks || 0),
@@ -324,6 +334,310 @@ export const get_meta_granular_analytics = tool(
             dimension: z.enum(['age_gender', 'geography', 'device']),
             startDate: z.string(),
             endDate: z.string()
+        })
+    }
+);
+
+export const meta_platform_performance = tool(
+    async ({ accountId, startDate, endDate }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['impressions', 'clicks', 'spend', 'reach', 'frequency'];
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields,
+                breakdowns: ['publisher_platform']
+            });
+
+            const results = insights.map((row: any) => {
+                const impressions = parseInt(row.impressions || 0);
+                const clicks = parseInt(row.clicks || 0);
+                const spend = parseFloat(row.spend || 0);
+                const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                const cpc = clicks > 0 ? spend / clicks : 0;
+                const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
+
+                return {
+                    platform: row.publisher_platform,
+                    impressions,
+                    clicks,
+                    spend: spend.toFixed(2),
+                    reach: parseInt(row.reach || 0),
+                    frequency: parseFloat(row.frequency || 0).toFixed(2),
+                    ctr: ctr.toFixed(2) + '%',
+                    cpc: cpc.toFixed(2),
+                    cpm: cpm.toFixed(2)
+                };
+            });
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching platform performance: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_platform_performance',
+        description: 'Analyze Meta Ads performance by publisher platform (Facebook, Instagram, etc.).',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD')
+        })
+    }
+);
+
+export const meta_frequency_check = tool(
+    async ({ accountId, startDate, endDate, minFrequency = 2 }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['campaign_name', 'impressions', 'reach', 'frequency', 'spend'];
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields
+            });
+
+            const results = insights
+                .map((row: any) => ({
+                    campaign: row.campaign_name,
+                    impressions: parseInt(row.impressions || 0),
+                    reach: parseInt(row.reach || 0),
+                    frequency: parseFloat(row.frequency || 0),
+                    spend: parseFloat(row.spend || 0).toFixed(2)
+                }))
+                .filter((row: any) => row.frequency >= minFrequency);
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching frequency data: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_frequency_check',
+        description: 'Check Meta Ads frequency by campaign and flag items above a threshold.',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD'),
+            minFrequency: z.number().optional().describe('Minimum frequency to include (default 2)')
+        })
+    }
+);
+
+export const meta_location_performance = tool(
+    async ({ accountId, startDate, endDate, level = 'country' }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['impressions', 'clicks', 'spend', 'reach'];
+            const breakdowns = level === 'region' ? ['region'] : ['country'];
+
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields,
+                breakdowns
+            });
+
+            const results = insights.map((row: any) => {
+                const impressions = parseInt(row.impressions || 0);
+                const clicks = parseInt(row.clicks || 0);
+                const spend = parseFloat(row.spend || 0);
+                const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                const cpc = clicks > 0 ? spend / clicks : 0;
+
+                return {
+                    country: row.country,
+                    region: row.region,
+                    impressions,
+                    clicks,
+                    spend: spend.toFixed(2),
+                    reach: parseInt(row.reach || 0),
+                    ctr: ctr.toFixed(2) + '%',
+                    cpc: cpc.toFixed(2)
+                };
+            });
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching location performance: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_location_performance',
+        description: 'Analyze Meta Ads performance by country or region.',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD'),
+            level: z.enum(['country', 'region']).optional()
+        })
+    }
+);
+
+export const meta_device_performance = tool(
+    async ({ accountId, startDate, endDate }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['impressions', 'clicks', 'spend', 'reach'];
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields,
+                breakdowns: ['impression_device']
+            });
+
+            const results = insights.map((row: any) => {
+                const impressions = parseInt(row.impressions || 0);
+                const clicks = parseInt(row.clicks || 0);
+                const spend = parseFloat(row.spend || 0);
+                const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                const cpc = clicks > 0 ? spend / clicks : 0;
+
+                return {
+                    device: row.impression_device,
+                    impressions,
+                    clicks,
+                    spend: spend.toFixed(2),
+                    reach: parseInt(row.reach || 0),
+                    ctr: ctr.toFixed(2) + '%',
+                    cpc: cpc.toFixed(2)
+                };
+            });
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching device performance: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_device_performance',
+        description: 'Analyze Meta Ads performance by device.',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD')
+        })
+    }
+);
+
+export const meta_demographics_performance = tool(
+    async ({ accountId, startDate, endDate }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['impressions', 'clicks', 'spend', 'reach'];
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields,
+                breakdowns: ['age', 'gender']
+            });
+
+            const results = insights.map((row: any) => {
+                const impressions = parseInt(row.impressions || 0);
+                const clicks = parseInt(row.clicks || 0);
+                const spend = parseFloat(row.spend || 0);
+                const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                const cpc = clicks > 0 ? spend / clicks : 0;
+
+                return {
+                    age: row.age,
+                    gender: row.gender,
+                    impressions,
+                    clicks,
+                    spend: spend.toFixed(2),
+                    reach: parseInt(row.reach || 0),
+                    ctr: ctr.toFixed(2) + '%',
+                    cpc: cpc.toFixed(2)
+                };
+            });
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching demographic performance: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_demographics_performance',
+        description: 'Analyze Meta Ads performance by age and gender.',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD')
+        })
+    }
+);
+
+export const meta_placement_performance = tool(
+    async ({ accountId, startDate, endDate, includePositions = false }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return "Error: User ID not found.";
+
+        try {
+            const tokens = await getUserMetaTokens(userId);
+            const fields = ['impressions', 'clicks', 'spend', 'reach'];
+            const breakdowns = includePositions ? ['publisher_platform', 'platform_position'] : ['publisher_platform'];
+
+            const insights = await getMetaInsights(tokens.accessToken, {
+                accountId,
+                level: 'campaign',
+                timeRange: { since: startDate, until: endDate },
+                fields,
+                breakdowns
+            });
+
+            const results = insights.map((row: any) => {
+                const impressions = parseInt(row.impressions || 0);
+                const clicks = parseInt(row.clicks || 0);
+                const spend = parseFloat(row.spend || 0);
+                const ctr = impressions > 0 ? (clicks / impressions) * 100 : 0;
+                const cpc = clicks > 0 ? spend / clicks : 0;
+
+                return {
+                    platform: row.publisher_platform,
+                    position: row.platform_position,
+                    impressions,
+                    clicks,
+                    spend: spend.toFixed(2),
+                    reach: parseInt(row.reach || 0),
+                    ctr: ctr.toFixed(2) + '%',
+                    cpc: cpc.toFixed(2)
+                };
+            });
+
+            return JSON.stringify(results);
+        } catch (error: any) {
+            return `Error fetching placement performance: ${error.message}`;
+        }
+    },
+    {
+        name: 'meta_placement_performance',
+        description: 'Analyze Meta Ads performance by placement (publisher platform and optional position).',
+        schema: z.object({
+            accountId: z.string().describe('Meta Ad Account ID'),
+            startDate: z.string().describe('YYYY-MM-DD'),
+            endDate: z.string().describe('YYYY-MM-DD'),
+            includePositions: z.boolean().optional().describe('Include platform_position breakdown (default false)')
         })
     }
 );
@@ -797,6 +1111,12 @@ export const metaTools = [
     get_meta_performance_data,
     get_live_meta_ads_data,
     get_meta_granular_analytics,
+    meta_platform_performance,
+    meta_frequency_check,
+    meta_location_performance,
+    meta_device_performance,
+    meta_demographics_performance,
+    meta_placement_performance,
     get_meta_ad_format_performance,
     toggle_meta_entity_status,
     update_meta_entity_budget,

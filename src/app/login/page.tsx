@@ -36,7 +36,7 @@ export default function LoginPage() {
             if (res.ok) {
                 setToast({ message: 'Login successful! Redirecting...', type: 'success' });
                 localStorage.setItem('user', JSON.stringify(data.user));
-                setTimeout(() => router.push('/nexus'), 1500);
+                setTimeout(() => router.push('/romeo-charge'), 1500);
             } else {
                 setToast({ message: data.error || 'Invalid credentials', type: 'error' });
             }
@@ -98,32 +98,34 @@ export default function LoginPage() {
 
                     {/* Branding Text */}
                     <h1 style={{
-                        fontSize: '42px',
-                        fontWeight: 700,
-                        color: '#ffffff',
-                        marginBottom: '12px',
-                        letterSpacing: '-0.02em',
+                        fontSize: '48px',
+                        fontWeight: 800,
+                        background: 'linear-gradient(to right, #ffffff, #00bcd4)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        marginBottom: '16px',
+                        letterSpacing: '-0.04em',
                         textAlign: 'left',
                     }}>
-                        MetricGraph
+                        Markgraph
                     </h1>
                     <p style={{
-                        color: '#cbd5e1',
+                        color: '#94a3b8',
                         fontSize: '18px',
                         fontWeight: 400,
                         textAlign: 'left',
-                        lineHeight: '1.5',
+                        lineHeight: '1.6',
                         marginBottom: '48px',
                         maxWidth: '90%'
                     }}>
-                        AI-Powered Marketing Intelligence Platform
+                        Transform your marketing chaos into autonomous orchestration. Markgraph synchronizes multi-platform data and deploys specialized AI agents to optimize your growth.
                     </p>
 
-                    {/* Feature List (Cleaner, no pills) */}
+                    {/* Feature List (Nexus & Sync Engine) */}
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '24px',
+                        gap: '32px',
                         width: '100%',
                     }}>
                         <div style={{
@@ -132,43 +134,20 @@ export default function LoginPage() {
                             gap: '16px',
                         }}>
                             <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '6px', // Sharper
-                                background: 'rgba(0,168,204,0.15)', // Subtle primary bg
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                marginTop: '2px' // Align with text
-                            }}>
-                                <TrendingUp size={16} color="#00a8cc" />
-                            </div>
-                            <div>
-                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '15px', marginBottom: '4px' }}>Real-time Analytics</div>
-                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.4' }}>Track performance instantly</div>
-                            </div>
-                        </div>
-
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '16px',
-                        }}>
-                            <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '6px',
-                                background: 'rgba(139,92,246,0.15)',
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '8px',
+                                background: 'rgba(0,188,212,0.15)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginTop: '2px'
                             }}>
-                                <Zap size={16} color="#a78bfa" />
+                                <Zap size={18} color="#00bcd4" />
                             </div>
                             <div>
-                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '15px', marginBottom: '4px' }}>AI-Powered Insights</div>
-                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.4' }}>Smart recommendations</div>
+                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>Nexus Intelligence</div>
+                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>Autonomous multi-agent orchestration for Google, Meta, and beyond.</div>
                             </div>
                         </div>
 
@@ -178,20 +157,43 @@ export default function LoginPage() {
                             gap: '16px',
                         }}>
                             <div style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '6px',
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '8px',
+                                background: 'rgba(124,58,237,0.15)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                marginTop: '2px'
+                            }}>
+                                <TrendingUp size={18} color="#7c3aed" />
+                            </div>
+                            <div>
+                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>Unified Sync Engine</div>
+                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>One-click integration for all your marketing sources with automated background sync.</div>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '16px',
+                        }}>
+                            <div style={{
+                                width: '36px',
+                                height: '36px',
+                                borderRadius: '8px',
                                 background: 'rgba(16,185,129,0.15)',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 marginTop: '2px'
                             }}>
-                                <BarChart3 size={16} color="#34d399" />
+                                <BarChart3 size={18} color="#10b981" />
                             </div>
                             <div>
-                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '15px', marginBottom: '4px' }}>Multi-Platform</div>
-                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.4' }}>Google Ads, Meta & more</div>
+                                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '16px', marginBottom: '4px' }}>Narrative Reporting</div>
+                                <div style={{ color: '#94a3b8', fontSize: '14px', lineHeight: '1.5' }}>Get human-readable summaries and actionable insights instead of just tables.</div>
                             </div>
                         </div>
                     </div>
@@ -206,20 +208,19 @@ export default function LoginPage() {
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
-                alignItems: 'center', // Added horizontal centering
+                alignItems: 'center',
                 padding: '60px',
-                height: '100%',
                 height: '100%',
             }}>
                 <div style={{ width: '100%', maxWidth: '380px' }}> {/* Container for form alignment */}
                     {/* Form Header */}
                     <div style={{ marginBottom: '32px' }}>
                         <h2 style={{
-                            fontSize: '28px',
-                            fontWeight: 600,
-                            color: '#1e293b',
-                            marginBottom: '8px',
-                            letterSpacing: '-0.01em'
+                            fontSize: '32px',
+                            fontWeight: 700,
+                            color: '#0f172a',
+                            marginBottom: '10px',
+                            letterSpacing: '-0.02em'
                         }}>
                             Sign In
                         </h2>
@@ -228,7 +229,7 @@ export default function LoginPage() {
                             fontSize: '15px',
                             fontWeight: 400
                         }}>
-                            Welcome back to MetricGraph
+                            Welcome back to Markgraph
                         </p>
                     </div>
 

@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
         if (accountIds && Array.isArray(accountIds) && accountIds.length > 0) {
             // Bulk granular deletion
-            await (prisma as any).dataSource.deleteMany({
+            await prisma.dataSource.deleteMany({
                 where: {
                     userId: userId,
                     accountId: { in: accountIds },
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: true, message: `Successfully disconnected ${accountIds.length} accounts` });
         } else if (accountId) {
             // Single granular deletion
-            await (prisma as any).dataSource.deleteMany({
+            await prisma.dataSource.deleteMany({
                 where: {
                     userId: userId,
                     accountId: accountId,
@@ -31,14 +31,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ success: true, message: `Successfully disconnected account ${accountId}` });
         } else {
             // Legacy/Full disconnect: Delete OAuth tokens and all sources for Google
-            await (prisma as any).oAuthToken.deleteMany({
+            await prisma.oAuthToken.deleteMany({
                 where: {
                     userId: userId,
                     provider: 'google'
                 }
             });
 
-            await (prisma as any).dataSource.deleteMany({
+            await prisma.dataSource.deleteMany({
                 where: {
                     userId: userId,
                     sourceType: 'google-ads'

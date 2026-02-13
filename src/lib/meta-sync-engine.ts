@@ -13,7 +13,7 @@ export async function syncMetaAdsData(userId: number, accountId: string) {
         const tokens = await getUserMetaTokens(userId);
         
         // 2. Update sync status
-        const dataSource = await (prisma as any).dataSource.findFirst({
+        const dataSource = await prisma.dataSource.findFirst({
             where: {
                 userId,
                 sourceType: 'meta-ads',
@@ -25,7 +25,7 @@ export async function syncMetaAdsData(userId: number, accountId: string) {
             throw new Error(`Data source not found for account ${accountId}`);
         }
 
-        await (prisma as any).dataSource.update({
+        await prisma.dataSource.update({
             where: { id: dataSource.id },
             data: { syncStatus: 'SYNCING' }
         });
@@ -78,7 +78,7 @@ export async function syncMetaAdsData(userId: number, accountId: string) {
              const cpc = clicks > 0 ? spend / clicks : 0;
              const cpm = impressions > 0 ? (spend / impressions) * 1000 : 0;
 
-             await (prisma as any).metaCampaignMetrics.upsert({
+             await prisma.metaCampaignMetrics.upsert({
                  where: {
                      dataSourceId_campaignId_date: {
                          dataSourceId: dataSource.id,
@@ -126,7 +126,7 @@ export async function syncMetaAdsData(userId: number, accountId: string) {
         }
 
         // 5. Update final status
-        await (prisma as any).dataSource.update({
+        await prisma.dataSource.update({
             where: { id: dataSource.id },
             data: { 
                 syncStatus: 'COMPLETED',
@@ -141,7 +141,7 @@ export async function syncMetaAdsData(userId: number, accountId: string) {
         console.error('[Meta Sync] Error:', error);
         
         // Update status to FAILED
-        await (prisma as any).dataSource.updateMany({
+        await prisma.dataSource.updateMany({
             where: { 
                 userId, 
                 sourceType: 'meta-ads', 

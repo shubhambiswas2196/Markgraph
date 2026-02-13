@@ -88,68 +88,74 @@ export const ThinkingAccordion: React.FC<ThinkingAccordionProps> = ({ reasoning,
                     color: isComplete ? 'var(--text-muted)' : 'var(--primary-color)'
                 }}>
                     {isComplete ? <Brain size={14} /> : <Loader2 size={14} className="animate-spin" />}
-                    <span>{isComplete ? 'View reasoning' : 'Thinking...'}</span>
+                    <span>
+                        {isComplete
+                            ? (reasoning ? 'View reasoning' : 'View activity')
+                            : (activeTool && !activeTool.includes('_') ? activeTool : 'Thinking...')}
+                    </span>
                 </div>
                 {isOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
 
             {/* Content Area - Minimal & Clean */}
-            {isOpen && (
-                <div style={{
-                    marginTop: '8px',
-                    paddingLeft: '14px', // Slight indentation
-                    borderLeft: '2px solid var(--border-color)', // Simple thread line
-                    marginLeft: '6px'
-                }}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '8px' }}>
-                        {/* Steps List */}
-                        {steps.map((step, idx) => {
-                            const { status, text } = getStepDetails(step);
-                            const isDone = status === 'completed';
-                            const isRunning = status === 'in_progress';
+            {
+                isOpen && (
+                    <div style={{
+                        marginTop: '8px',
+                        paddingLeft: '14px', // Slight indentation
+                        borderLeft: '2px solid var(--border-color)', // Simple thread line
+                        marginLeft: '6px'
+                    }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', paddingBottom: '8px' }}>
+                            {/* Steps List */}
+                            {steps.map((step, idx) => {
+                                const { status, text } = getStepDetails(step);
+                                const isDone = status === 'completed';
+                                const isRunning = status === 'in_progress';
 
-                            return (
-                                <div key={idx} style={{
+                                return (
+                                    <div key={idx} style={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        alignItems: 'flex-start',
+                                        opacity: isDone ? 0.7 : 1
+                                    }}>
+                                        <div style={{ marginTop: '3px', flexShrink: 0 }}>
+                                            {isDone ? <CheckCircle2 size={14} color="var(--text-muted)" /> :
+                                                isRunning ? <Loader2 size={14} className="animate-spin" color="var(--primary-color)" /> :
+                                                    <Circle size={12} color="var(--border-color)" />}
+                                        </div>
+                                        <span style={{
+                                            fontSize: '14px',
+                                            lineHeight: '1.5',
+                                            color: 'var(--text-main)',
+                                            fontWeight: isRunning ? 500 : 400
+                                        }}>
+                                            {text}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Active Tool Indicator (if running) */}
+                            {activeTool && !isComplete && (
+                                <div style={{
                                     display: 'flex',
                                     gap: '10px',
-                                    alignItems: 'flex-start',
-                                    opacity: isDone ? 0.7 : 1
+                                    alignItems: 'center',
+                                    marginTop: '4px',
+                                    color: 'var(--primary-color)',
+                                    fontSize: '13px',
+                                    fontWeight: 500
                                 }}>
-                                    <div style={{ marginTop: '3px', flexShrink: 0 }}>
-                                        {isDone ? <CheckCircle2 size={14} color="var(--text-muted)" /> :
-                                            isRunning ? <Loader2 size={14} className="animate-spin" color="var(--primary-color)" /> :
-                                                <Circle size={12} color="var(--border-color)" />}
-                                    </div>
-                                    <span style={{
-                                        fontSize: '14px',
-                                        lineHeight: '1.5',
-                                        color: 'var(--text-main)',
-                                        fontWeight: isRunning ? 500 : 400
-                                    }}>
-                                        {text}
-                                    </span>
+                                    <Loader2 size={12} className="animate-spin" />
+                                    <span>{activeTool.includes('_') ? `Using tool: ${activeTool.split('_').join(' ')}` : activeTool}</span>
                                 </div>
-                            );
-                        })}
-
-                        {/* Active Tool Indicator (if running) */}
-                        {activeTool && !isComplete && (
-                            <div style={{
-                                display: 'flex',
-                                gap: '10px',
-                                alignItems: 'center',
-                                marginTop: '4px',
-                                color: 'var(--primary-color)',
-                                fontSize: '13px',
-                                fontWeight: 500
-                            }}>
-                                <Loader2 size={12} className="animate-spin" />
-                                <span>Using tool: {activeTool.split('_').join(' ')}</span>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };

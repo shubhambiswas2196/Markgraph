@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         let tokenRecord;
         try {
             if (email) {
-                tokenRecord = await (prisma as any).oAuthToken.findUnique({
+                tokenRecord = await prisma.oAuthToken.findUnique({
                     where: {
                         userId_provider_email: {
                             userId: userId,
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
                 });
             } else {
                 // Fallback to most recent google token if no email specified
-                tokenRecord = await (prisma as any).oAuthToken.findFirst({
+                tokenRecord = await prisma.oAuthToken.findFirst({
                     where: {
                         userId: userId,
                         provider: 'google',
@@ -68,19 +68,24 @@ export async function GET(request: NextRequest) {
                     refresh_token: tokenRecord.refreshToken
                 });
 
-                const { tokens } = await oauth2Client.refreshAccessToken();
-                accessToken = tokens.access_token!;
+                const { credentials: newCredentials } = await oauth2Client.refreshAccessToken();
 
-                // Update DB
-                await (prisma as any).oAuthToken.update({
-                    where: { id: tokenRecord.id },
-                    data: {
-                        accessToken: tokens.access_token!,
-                        expiresAt: new Date(tokens.expiry_date!),
-                        updatedAt: new Date()
-                    }
-                });
-                console.log('DEBUG [accounts]: Token refreshed successfully.');
+                if (newCredentials && newCredentials.access_token) {
+                    accessToken = newCredentials.access_token;
+
+                    // Update DB
+                    await prisma.oAuthToken.update({
+                        where: { id: tokenRecord.id },
+                        data: {
+                            accessToken: newCredentials.access_token,
+                            expiresAt: newCredentials.expiry_date ? new Date(newCredentials.expiry_date) : new Date(Date.now() + 3600 * 1000),
+                            updatedAt: new Date()
+                        }
+                    });
+                    console.log('DEBUG [accounts]: Token refreshed successfully.');
+                } else {
+                    console.error('DEBUG [accounts]: Token refresh succeeded but returned no access token.');
+                }
             } catch (refreshErr: any) {
                 console.error('DEBUG [accounts]: Token refresh failed:', refreshErr.message);
                 // Continue anyway, maybe it still works
@@ -102,7 +107,7 @@ export async function GET(request: NextRequest) {
             console.log('DEBUG: Fetching logic for managerId:', managerId);
             const customer = adsClient.Customer({
                 customer_id: managerId.replace(/-/g, ''),
-                refresh_token: tokenRecord.refreshToken,
+                refresh_token: tokenRecord.refreshToken || '',
             } as any);
 
             const results = await customer.query(`
@@ -157,7 +162,7 @@ export async function GET(request: NextRequest) {
                     const cleanId = resourceName.split('/')[1];
                     const customer = adsClient.Customer({
                         customer_id: cleanId,
-                        refresh_token: tokenRecord.refreshToken,
+                        refresh_token: tokenRecord.refreshToken || '',
                     });
 
                     const details = await customer.query(`

@@ -68,13 +68,14 @@ const ConnectPopup = ({
             display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(5px)'
         }}>
             <div style={{
-                backgroundColor: 'white', borderRadius: '16px', width: '600px', maxWidth: '90%',
-                boxShadow: '0 20px 50px rgba(0,0,0,0.2)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
-                maxHeight: '90vh'
+                backgroundColor: 'var(--bg-card)', borderRadius: '16px', width: '600px', maxWidth: '90%',
+                boxShadow: 'var(--shadow-lg)', overflow: 'hidden', display: 'flex', flexDirection: 'column',
+                maxHeight: '90vh', border: '1px solid var(--border-color)',
+                transition: 'background-color 0.5s ease, border-color 0.5s ease'
             }}>
                 {/* Header */}
-                <div style={{ padding: '20px 24px', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ fontSize: '18px', fontWeight: 600, fontFamily: "'Inter', sans-serif" }}>
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: 600, fontFamily: "'Inter', sans-serif", color: 'var(--text-main)' }}>
                         {step === 'selection' && 'Connect Data Source'}
                         {step === 'auth' && 'Authorize Access'}
                         {step === 'meta-token' && 'Meta Ads Access Token'}
@@ -82,7 +83,7 @@ const ConnectPopup = ({
                         {step === 'success' && 'Connection Successful'}
                     </h3>
                     <button onClick={onClose} style={{ border: 'none', background: 'transparent', cursor: 'pointer' }}>
-                        <X size={20} color="#666" />
+                        <X size={20} color="var(--text-muted)" />
                     </button>
                 </div>
 
@@ -97,8 +98,8 @@ const ConnectPopup = ({
                                 onClick={() => onSelectSource('google-ads')}
                                 style={{
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-                                    padding: '32px 24px', border: '1px solid #E5E7EB', borderRadius: '12px',
-                                    backgroundColor: 'white', cursor: 'pointer', transition: 'all 0.2s',
+                                    padding: '32px 24px', border: '1px solid var(--border-color)', borderRadius: '12px',
+                                    backgroundColor: 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s',
                                     textAlign: 'center'
                                 }}
                                 onMouseEnter={(e) => {
@@ -106,14 +107,14 @@ const ConnectPopup = ({
                                     e.currentTarget.style.backgroundColor = 'rgba(200, 28, 222, 0.02)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#E5E7EB';
-                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                                    e.currentTarget.style.backgroundColor = 'var(--bg-card)';
                                 }}
                             >
                                 <img src="/google-ads-logo.png" alt="Google Ads" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                                 <div>
-                                    <div style={{ fontSize: '15px', fontWeight: 600, color: '#111', marginBottom: '4px' }}>Google Ads</div>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>Campaigns & Performance</div>
+                                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>Google Ads</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Campaigns & Performance</div>
                                 </div>
                             </button>
 
@@ -122,8 +123,8 @@ const ConnectPopup = ({
                                 onClick={() => onSelectSource('meta-ads')}
                                 style={{
                                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-                                    padding: '32px 24px', border: '1px solid #E5E7EB', borderRadius: '12px',
-                                    backgroundColor: 'white', cursor: 'pointer', transition: 'all 0.2s',
+                                    padding: '32px 24px', border: '1px solid var(--border-color)', borderRadius: '12px',
+                                    backgroundColor: 'var(--bg-card)', cursor: 'pointer', transition: 'all 0.2s',
                                     textAlign: 'center'
                                 }}
                                 onMouseEnter={(e) => {
@@ -131,14 +132,14 @@ const ConnectPopup = ({
                                     e.currentTarget.style.backgroundColor = 'rgba(24, 119, 242, 0.02)';
                                 }}
                                 onMouseLeave={(e) => {
-                                    e.currentTarget.style.borderColor = '#E5E7EB';
-                                    e.currentTarget.style.backgroundColor = 'white';
+                                    e.currentTarget.style.borderColor = 'var(--border-color)';
+                                    e.currentTarget.style.backgroundColor = 'var(--bg-card)';
                                 }}
                             >
                                 <img src="/meta-logo.png" alt="Meta Ads" style={{ width: '48px', height: '48px', objectFit: 'contain' }} />
                                 <div>
-                                    <div style={{ fontSize: '15px', fontWeight: 600, color: '#111', marginBottom: '4px' }}>Meta Ads</div>
-                                    <div style={{ fontSize: '12px', color: '#666' }}>FB & Instagram Performance</div>
+                                    <div style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>Meta Ads</div>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>FB & Instagram Performance</div>
                                 </div>
                             </button>
                         </div>
@@ -151,7 +152,7 @@ const ConnectPopup = ({
                                 <img src="/meta.gif" alt="Meta" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                             </div>
                             <h4 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>Enter Meta Access Token</h4>
-                            <p style={{ fontSize: '14px', color: '#666', marginBottom: '12px', maxWidth: '400px', lineHeight: '1.5' }}>
+                            <p style={{ fontSize: '14px', color: 'var(--text-muted)', marginBottom: '12px', maxWidth: '400px', lineHeight: '1.5' }}>
                                 Paste your Meta Marketing API Access Token below to connect your Meta Ads accounts.
                             </p>
                             <a
@@ -212,13 +213,13 @@ const ConnectPopup = ({
                                             width: '100%',
                                             padding: '12px 16px',
                                             borderRadius: '8px',
-                                            border: '1px solid #D1D5DB',
+                                            border: '1px solid var(--border-color)',
                                             fontSize: '14px',
                                             outline: 'none',
                                             transition: 'border-color 0.2s',
                                         }}
                                         onFocus={(e) => e.target.style.borderColor = '#1877F2'}
-                                        onBlur={(e) => e.target.style.borderColor = '#D1D5DB'}
+                                        onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
                                     />
                                 </div>
 
@@ -247,9 +248,9 @@ const ConnectPopup = ({
                                             flex: 1,
                                             padding: '12px 24px',
                                             borderRadius: '8px',
-                                            border: '1px solid #E5E7EB',
-                                            backgroundColor: 'white',
-                                            color: '#374151',
+                                            border: '1px solid var(--border-color)',
+                                            backgroundColor: 'var(--bg-card)',
+                                            color: 'var(--text-main)',
                                             fontSize: '14px',
                                             fontWeight: 600,
                                             cursor: 'pointer',
@@ -266,7 +267,7 @@ const ConnectPopup = ({
                                             padding: '12px 24px',
                                             borderRadius: '8px',
                                             border: 'none',
-                                            backgroundColor: metaToken.trim() && !isSavingToken ? '#1877F2' : '#E5E7EB',
+                                            backgroundColor: metaToken.trim() && !isSavingToken ? '#1877F2' : 'var(--border-color)',
                                             color: metaToken.trim() && !isSavingToken ? 'white' : '#9CA3AF',
                                             fontSize: '14px',
                                             fontWeight: 600,
@@ -278,161 +279,168 @@ const ConnectPopup = ({
                                     </button>
                                 </div>
                             </form>
-                        </div>
+                        </div >
                     )}
 
                     {/* Step 2: Auth (Only for Google) */}
-                    {step === 'auth' && (
-                        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                            <div style={{ width: '160px', height: '160px', marginBottom: '8px' }}>
-                                <DotLottieReact
-                                    src="https://lottie.host/aa37af10-cb1b-4b1d-b7ce-52837729b201/cwaaZfEoNH.lottie"
-                                    autoplay
-                                />
-                            </div>
-                            <h4 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Connect to Google Ads</h4>
-                            {isAuthorized ? (
-                                <>
-                                    <div style={{
-                                        backgroundColor: '#F0FDF4', color: '#166534', padding: '12px',
-                                        borderRadius: '8px', fontSize: '14px', marginBottom: '24px',
-                                        display: 'flex', alignItems: 'center', gap: '8px'
-                                    }}>
-                                        <Check size={16} />
-                                        Your Google account is already authorized.
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
-                                        <button
-                                            onClick={() => { setStep('accounts'); fetchAccounts(userId!); }}
-                                            className="btn-primary"
-                                        >
-                                            Continue with current account
-                                        </button>
-                                        <button
-                                            onClick={() => handleGoogleLogin(true)}
-                                            style={{
-                                                backgroundColor: 'white', border: '1px solid #D1D5DB', padding: '12px',
-                                                borderRadius: '8px', fontWeight: 600, cursor: 'pointer', color: '#374151',
-                                                fontSize: '14px'
-                                            }}
-                                        >
-                                            Connect another Google account
-                                        </button>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    <p style={{ color: '#666', fontSize: '14px', marginBottom: '32px', lineHeight: '1.6' }}>
-                                        You are about to be redirected to Google to authorize access. We only request read-only access to your performance reports.
-                                    </p>
-                                    <button
-                                        onClick={() => handleGoogleLogin()}
-                                        className="btn-primary"
-                                    >
-                                        Authorize Access
-                                    </button>
-                                </>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Step 3: Accounts */}
-                    {step === 'accounts' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', height: '480px' }}>
-                            <div style={{ marginBottom: '16px', position: 'relative' }}>
-                                <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
-                                <input
-                                    type="text"
-                                    placeholder="Search by account name or ID..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    style={{
-                                        width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px',
-                                        border: '1px solid #E5E7EB', outline: 'none', fontSize: '14px',
-                                        backgroundColor: '#F9FAFB'
-                                    }}
-                                />
-                            </div>
-
-                            <div style={{
-                                flex: 1, overflowY: 'auto', border: '1px solid #E5E7EB', borderRadius: '12px',
-                                backgroundColor: 'white'
-                            }}>
-                                {loadingAccounts ? (
-                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '60px' }}>
-                                        <Loader2 className="animate-spin text-primary-color" size={24} />
-                                        <span style={{ fontSize: '14px', color: '#666' }}>Fetching your ad accounts...</span>
-                                    </div>
+                    {
+                        step === 'auth' && (
+                            <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                <div style={{ width: '160px', height: '160px', marginBottom: '8px' }}>
+                                    <DotLottieReact
+                                        src="https://lottie.host/aa37af10-cb1b-4b1d-b7ce-52837729b201/cwaaZfEoNH.lottie"
+                                        autoplay
+                                    />
+                                </div>
+                                <h4 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '12px' }}>Connect to Google Ads</h4>
+                                {isAuthorized ? (
+                                    <>
+                                        <div style={{
+                                            backgroundColor: '#F0FDF4', color: '#166534', padding: '12px',
+                                            borderRadius: '8px', fontSize: '14px', marginBottom: '24px',
+                                            display: 'flex', alignItems: 'center', gap: '8px'
+                                        }}>
+                                            <Check size={16} />
+                                            Your Google account is already authorized.
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%' }}>
+                                            <button
+                                                onClick={() => { setStep('accounts'); fetchAccounts(userId!); }}
+                                                className="btn-primary"
+                                            >
+                                                Continue with current account
+                                            </button>
+                                            <button
+                                                onClick={() => handleGoogleLogin(true)}
+                                                style={{
+                                                    backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '12px',
+                                                    borderRadius: '8px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-main)',
+                                                    fontSize: '14px'
+                                                }}
+                                            >
+                                                Connect another Google account
+                                            </button>
+                                        </div>
+                                    </>
                                 ) : (
                                     <>
-                                        {accounts.length > 0 ? renderAccountTree(null, 0) : (
-                                            <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280' }}>
-                                                <div style={{ fontSize: '14px', fontWeight: 500 }}>No accounts found</div>
-                                                <p style={{ fontSize: '12px', marginTop: '4px' }}>Make sure you have access to {selectedPlatform}.</p>
-                                            </div>
-                                        )}
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '32px', lineHeight: '1.6' }}>
+                                            You are about to be redirected to Google to authorize access. We only request read-only access to your performance reports.
+                                        </p>
+                                        <button
+                                            onClick={() => handleGoogleLogin()}
+                                            className="btn-primary"
+                                        >
+                                            Authorize Access
+                                        </button>
                                     </>
-                                )}
-                            </div>
+                                )
+                                }
+                            </div >
+                        )}
 
-                            <div style={{
-                                marginTop: '20px', padding: '16px', backgroundColor: '#F9FAFB',
-                                borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between'
-                            }}>
-                                <div style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
-                                    {selectedAccounts.length} account{selectedAccounts.length !== 1 ? 's' : ''} selected
+                    {/* Step 3: Accounts */}
+                    {
+                        step === 'accounts' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', height: '480px' }}>
+                                <div style={{ marginBottom: '16px', position: 'relative' }}>
+                                    <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9CA3AF' }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search by account name or ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{
+                                            width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px',
+                                            border: '1px solid var(--border-color)', outline: 'none', fontSize: '14px',
+                                            backgroundColor: 'var(--bg-hover)', color: 'var(--text-main)'
+                                        }}
+                                    />
                                 </div>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <button
-                                        onClick={() => setStep('selection')}
-                                        style={{
-                                            padding: '10px 16px', border: '1px solid #D1D5DB', borderRadius: '8px',
-                                            background: 'white', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
-                                            color: '#374151'
-                                        }}
-                                    >
-                                        Back
-                                    </button>
-                                    <button
-                                        onClick={finishSetup}
-                                        disabled={selectedAccounts.length === 0}
-                                        className="btn-primary"
-                                        style={{
-                                            padding: '10px 24px', opacity: selectedAccounts.length === 0 ? 0.5 : 1,
-                                            cursor: selectedAccounts.length === 0 ? 'not-allowed' : 'pointer',
-                                            width: 'auto'
-                                        }}
-                                    >
-                                        Connect Selected
-                                    </button>
+
+                                <div style={{
+                                    flex: 1, overflowY: 'auto', border: '1px solid var(--border-color)', borderRadius: '12px',
+                                    backgroundColor: 'var(--bg-card)'
+                                }}>
+                                    {loadingAccounts ? (
+                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '60px' }}>
+                                            <Loader2 className="animate-spin text-primary-color" size={24} />
+                                            <span style={{ fontSize: '14px', color: 'var(--text-muted)' }}>Fetching your ad accounts...</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {accounts.length > 0 ? renderAccountTree(null, 0) : (
+                                                <div style={{ padding: '40px', textAlign: 'center', color: '#6B7280' }}>
+                                                    <div style={{ fontSize: '14px', fontWeight: 500 }}>No accounts found</div>
+                                                    <p style={{ fontSize: '12px', marginTop: '4px' }}>Make sure you have access to {selectedPlatform}.</p>
+                                                </div>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
+
+                                <div style={{
+                                    marginTop: '20px', padding: '16px', backgroundColor: 'var(--bg-hover)',
+                                    borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                                    border: '1px solid var(--border-color)'
+                                }}>
+                                    <div style={{ fontSize: '14px', color: 'var(--text-main)', fontWeight: 500 }}>
+                                        {selectedAccounts.length} account{selectedAccounts.length !== 1 ? 's' : ''} selected
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        <button
+                                            onClick={() => setStep('selection')}
+                                            style={{
+                                                padding: '10px 16px', border: '1px solid var(--border-color)', borderRadius: '8px',
+                                                background: 'var(--bg-card)', cursor: 'pointer', fontSize: '14px', fontWeight: 600,
+                                                color: 'var(--text-main)'
+                                            }}
+                                        >
+                                            Back
+                                        </button>
+                                        <button
+                                            onClick={finishSetup}
+                                            disabled={selectedAccounts.length === 0}
+                                            className="btn-primary"
+                                            style={{
+                                                padding: '10px 24px', opacity: selectedAccounts.length === 0 ? 0.5 : 1,
+                                                cursor: selectedAccounts.length === 0 ? 'not-allowed' : 'pointer',
+                                                width: 'auto'
+                                            }}
+                                        >
+                                            Connect Selected
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )
+                    }
 
                     {/* Step 4: Success */}
-                    {step === 'success' && (
-                        <div style={{ textAlign: 'center', padding: '24px 0' }}>
-                            <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: '#E6F4EA', color: '#1E8E3E', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
-                                <Check size={32} strokeWidth={3} />
+                    {
+                        step === 'success' && (
+                            <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                                <div style={{ width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--bg-hover)', color: 'var(--success-color)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+                                    <Check size={32} strokeWidth={3} />
+                                </div>
+                                <h4 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: 'var(--text-main)' }}>Data Connected!</h4>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '15px', marginBottom: '32px' }}>
+                                    Your data is now syncing. You can view it in the dashboard.
+                                </p>
+                                <button
+                                    onClick={onClose}
+                                    style={{
+                                        backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', padding: '12px 40px',
+                                        borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
+                                    }}
+                                >
+                                    Done
+                                </button>
                             </div>
-                            <h4 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '12px', color: '#111' }}>Data Connected!</h4>
-                            <p style={{ color: '#666', fontSize: '15px', marginBottom: '32px' }}>
-                                Your data is now syncing. You can view it in the dashboard.
-                            </p>
-                            <button
-                                onClick={onClose}
-                                style={{
-                                    backgroundColor: 'var(--primary-color)', color: 'white', border: 'none', padding: '12px 40px',
-                                    borderRadius: '8px', fontSize: '15px', fontWeight: 600, cursor: 'pointer'
-                                }}
-                            >
-                                Done
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
+                        )
+                    }
+                </div >
+            </div >
         </div >
     );
 };
@@ -608,14 +616,56 @@ function SourcesContent() {
 
     // Initial Load
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            const u = JSON.parse(storedUser);
-            setUserId(u.id.toString());
-            fetchSources(u.id.toString());
-        } else {
-            router.push('/login');
-        }
+        let cancelled = false;
+
+        const init = async () => {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const u = JSON.parse(storedUser);
+                    const storedId = u?.id ?? u?.userId;
+                    if (storedId) {
+                        if (!cancelled) {
+                            setUserId(storedId.toString());
+                            fetchSources(storedId.toString());
+                        }
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Failed to parse stored user', error);
+                    localStorage.removeItem('user');
+                }
+            }
+
+            try {
+                const res = await fetch('/api/me');
+                if (!res.ok) {
+                    throw new Error('Not authenticated');
+                }
+                const data = await res.json();
+                const hydratedUser = {
+                    id: data.userId,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email
+                };
+                localStorage.setItem('user', JSON.stringify(hydratedUser));
+                if (!cancelled) {
+                    setUserId(hydratedUser.id.toString());
+                    fetchSources(hydratedUser.id.toString());
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    router.push('/login');
+                }
+            }
+        };
+
+        void init();
+
+        return () => {
+            cancelled = true;
+        };
     }, [router, fetchSources]);
 
     // Handle Message from Popup
@@ -754,7 +804,7 @@ function SourcesContent() {
                             backgroundColor: isSel ? 'rgba(0, 120, 212, 0.03)' : 'transparent',
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                             transition: 'all 0.1s ease',
-                            borderLeft: !searchTerm && level > 0 ? '2px solid #E5E7EB' : 'none',
+                            borderLeft: !searchTerm && level > 0 ? '2px solid var(--border-color)' : 'none',
                             marginLeft: !searchTerm && level > 0 ? '-2px' : '0'
                         }}
                         onMouseEnter={(e) => { if (!isSel) e.currentTarget.style.backgroundColor = '#F9FAFB'; }}
@@ -780,23 +830,23 @@ function SourcesContent() {
                             <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
                                 <span style={{
                                     fontSize: '14px', fontWeight: isSel ? 600 : 500,
-                                    color: isSel ? 'var(--primary-color)' : '#111827',
+                                    color: isSel ? 'var(--primary-color)' : 'var(--text-main)',
                                     whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis'
                                 }}>
                                     {acc.name}
                                 </span>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <span style={{ fontSize: '11px', color: '#6B7280', fontFamily: 'monospace' }}>{acc.id}</span>
-                                    {acc.currency && <span style={{ fontSize: '10px', color: '#9CA3AF', backgroundColor: '#F3F4F6', padding: '1px 4px', borderRadius: '3px' }}>{acc.currency}</span>}
+                                    {acc.currency && <span style={{ fontSize: '10px', color: '#9CA3AF', backgroundColor: 'var(--bg-hover)', padding: '1px 4px', borderRadius: '3px' }}>{acc.currency}</span>}
                                 </div>
                             </div>
                         </div>
 
                         {!acc.isManager && (
                             <div style={{
-                                width: '20px', height: '20px', border: '2px solid ' + (isSel ? 'var(--primary-color)' : '#D1D5DB'),
+                                width: '20px', height: '20px', border: '2px solid ' + (isSel ? 'var(--primary-color)' : 'var(--border-color)'),
                                 borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                backgroundColor: isSel ? 'var(--primary-color)' : 'white',
+                                backgroundColor: isSel ? 'var(--primary-color)' : 'var(--bg-card)',
                                 transition: 'all 0.1s ease', flexShrink: 0
                             }}>
                                 {isSel && <Check size={14} color="white" />}
@@ -881,7 +931,7 @@ function SourcesContent() {
     };
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#F9FAFB' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)', color: 'var(--text-main)', transition: 'background-color 0.5s ease, color 0.5s ease' }}>
             <div style={{ position: 'sticky', top: 0, zIndex: 50 }}>
                 <Header pageName="Data Sources" hideSearch={true} hideNotifications={true} />
             </div>
@@ -892,24 +942,25 @@ function SourcesContent() {
                     {/* View Switcher */}
                     <div style={{
                         display: 'flex',
-                        backgroundColor: '#E5E7EB',
+                        backgroundColor: 'var(--bg-hover)',
                         padding: '4px',
                         borderRadius: '10px',
-                        gap: '4px'
+                        gap: '4px',
+                        border: '1px solid var(--border-color)'
                     }}>
                         <button
                             onClick={() => setViewMode('platform')}
                             style={{
                                 padding: '8px 16px',
                                 borderRadius: '8px',
-                                border: 'none',
                                 fontSize: '13px',
                                 fontWeight: 600,
                                 cursor: 'pointer',
-                                backgroundColor: viewMode === 'platform' ? 'white' : 'transparent',
-                                color: viewMode === 'platform' ? '#111' : '#6B7280',
-                                boxShadow: viewMode === 'platform' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                transition: 'all 0.2s'
+                                backgroundColor: viewMode === 'platform' ? 'var(--bg-card)' : 'transparent',
+                                color: viewMode === 'platform' ? 'var(--text-main)' : 'var(--text-muted)',
+                                boxShadow: viewMode === 'platform' ? 'var(--shadow-sm)' : 'none',
+                                transition: 'all 0.2s',
+                                border: viewMode === 'platform' ? '1px solid var(--border-color)' : 'none'
                             }}
                         >
                             Platform View
@@ -919,14 +970,14 @@ function SourcesContent() {
                             style={{
                                 padding: '8px 16px',
                                 borderRadius: '8px',
-                                border: 'none',
                                 fontSize: '13px',
                                 fontWeight: 600,
                                 cursor: 'pointer',
-                                backgroundColor: viewMode === 'client' ? 'white' : 'transparent',
-                                color: viewMode === 'client' ? '#111' : '#6B7280',
-                                boxShadow: viewMode === 'client' ? '0 2px 4px rgba(0,0,0,0.05)' : 'none',
-                                transition: 'all 0.2s'
+                                backgroundColor: viewMode === 'client' ? 'var(--bg-card)' : 'transparent',
+                                color: viewMode === 'client' ? 'var(--text-main)' : 'var(--text-muted)',
+                                boxShadow: viewMode === 'client' ? 'var(--shadow-sm)' : 'none',
+                                transition: 'all 0.2s',
+                                border: viewMode === 'client' ? '1px solid var(--border-color)' : 'none'
                             }}
                         >
                             Client View
@@ -969,11 +1020,11 @@ function SourcesContent() {
                     </div>
                 ) : sources.length === 0 ? (
                     <div style={{
-                        backgroundColor: 'white', borderRadius: '12px', padding: '60px', textAlign: 'center',
-                        border: '1px dashed #DDD'
+                        backgroundColor: 'var(--bg-card)', borderRadius: '12px', padding: '60px', textAlign: 'center',
+                        border: '1px dashed var(--border-color)'
                     }}>
-                        <div style={{ fontSize: '18px', fontWeight: 600, color: '#333' }}>No data sources connected</div>
-                        <p style={{ color: '#888', marginTop: '8px', marginBottom: '24px' }}>Connect Google Ads or Meta Ads to start seeing insights.</p>
+                        <div style={{ fontSize: '18px', fontWeight: 600, color: 'var(--text-main)' }}>No data sources connected</div>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '8px', marginBottom: '24px' }}>Connect Google Ads or Meta Ads to start seeing insights.</p>
                         <button
                             onClick={() => { setIsPopupOpen(true); setPopupStep('selection'); }}
                             style={{
@@ -1005,97 +1056,115 @@ function SourcesContent() {
                             }
 
                             return Object.entries(groups).map(([groupName, items]) => (
-                                <div key={groupName}>
+                                <div key={groupName} style={{ marginBottom: '32px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', padding: '0 8px' }}>
-                                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                        <h3 style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                                             {viewMode === 'platform' ? groupName.replace('-', ' ') : groupName}
                                         </h3>
-                                        <div style={{ height: '1px', flex: 1, backgroundColor: '#E5E7EB' }}></div>
-                                        <span style={{ fontSize: '12px', color: '#9CA3AF', fontWeight: 600 }}>{items.length} accounts</span>
+                                        <div style={{ height: '1px', flex: 1, backgroundColor: 'var(--border-color)' }}></div>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{items.length} accounts</span>
                                     </div>
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                         {items.map(source => {
                                             const isSelected = selectedIds.has(source.accountId);
                                             return (
                                                 <div key={`${source.platform}-${source.accountId}`} style={{
-                                                    borderRadius: '12px', border: '1px solid ' + (isSelected ? 'var(--primary-color)' : '#E5E7EB'),
-                                                    padding: '20px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                                    boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                                                    borderRadius: '8px',
+                                                    border: isSelected ? '1px solid var(--primary-color)' : '1px solid transparent',
+                                                    padding: '12px 16px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    backgroundColor: isSelected ? 'var(--bg-hover)' : 'transparent',
                                                     transition: 'all 0.2s',
-                                                    backgroundColor: isSelected ? 'rgba(200, 28, 222, 0.01)' : 'white'
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1, minWidth: 0 }}>
+                                                    cursor: 'default'
+                                                }}
+                                                    onMouseEnter={(e) => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+                                                        }
+                                                    }}
+                                                    onMouseLeave={(e) => {
+                                                        if (!isSelected) {
+                                                            e.currentTarget.style.backgroundColor = 'transparent';
+                                                        }
+                                                    }}
+                                                >
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: 1, minWidth: 0 }}>
                                                         <div
                                                             onClick={() => toggleId(source.accountId)}
                                                             style={{
-                                                                width: '18px', height: '18px', border: '2px solid ' + (isSelected ? 'var(--primary-color)' : '#D1D5DB'),
+                                                                width: '16px', height: '16px',
+                                                                border: isSelected ? 'none' : '1px solid var(--text-muted)',
                                                                 borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                backgroundColor: isSelected ? 'var(--primary-color)' : 'white',
-                                                                cursor: 'pointer', flexShrink: 0
+                                                                backgroundColor: isSelected ? 'var(--primary-color)' : 'transparent',
+                                                                cursor: 'pointer', flexShrink: 0,
+                                                                transition: 'all 0.1s'
                                                             }}
                                                         >
-                                                            {isSelected && <Check size={12} color="white" />}
+                                                            {isSelected && <Check size={10} color="white" />}
                                                         </div>
 
-                                                        <img
-                                                            src={source.platform === 'google-ads' ? '/google-ads-logo.png' : '/meta-logo.png'}
-                                                            alt={source.platform}
-                                                            style={{ width: '32px', height: '32px', objectFit: 'contain' }}
-                                                        />
+                                                        {/* Icon with subtle background */}
+                                                        <div style={{
+                                                            width: '32px', height: '32px', borderRadius: '6px',
+                                                            backgroundColor: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                        }}>
+                                                            <img
+                                                                src={source.platform === 'google-ads' ? '/google-ads-logo.png' : '/meta-logo.png'}
+                                                                alt={source.platform}
+                                                                style={{ width: '18px', height: '18px', objectFit: 'contain' }}
+                                                            />
+                                                        </div>
 
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0, flex: 1 }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                                                                <h4 style={{ fontSize: '15px', fontWeight: 600, color: '#111', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{source.accountName}</h4>
-                                                                <span style={{
-                                                                    fontSize: '10px', fontWeight: 700, padding: '1px 6px', borderRadius: '4px',
-                                                                    backgroundColor: source.platform === 'google-ads' ? '#EBF5FF' : '#E7F3FF',
-                                                                    color: source.platform === 'google-ads' ? '#2563EB' : '#1877F2',
-                                                                    textTransform: 'uppercase'
-                                                                }}>
-                                                                    {source.platform === 'google-ads' ? 'Google' : 'Meta'}
-                                                                </span>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <h4 style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-main)' }}>{source.accountName}</h4>
 
-                                                                {/* Client Badge */}
+                                                                {/* Client Badge - Cleaner */}
                                                                 <div
                                                                     onClick={() => setEditingSource({ accountId: source.accountId, sourceType: source.platform, clientName: source.clientName || '' })}
                                                                     style={{
                                                                         fontSize: '11px',
-                                                                        color: source.clientName ? '#4F46E5' : '#9CA3AF',
-                                                                        backgroundColor: source.clientName ? '#EEF2FF' : '#F3F4F6',
-                                                                        padding: '2px 8px',
-                                                                        borderRadius: '6px',
+                                                                        color: source.clientName ? 'var(--text-main)' : 'var(--text-muted)',
+                                                                        backgroundColor: 'transparent',
+                                                                        padding: '2px 6px',
+                                                                        borderRadius: '4px',
                                                                         cursor: 'pointer',
                                                                         display: 'flex',
                                                                         alignItems: 'center',
                                                                         gap: '4px',
-                                                                        fontWeight: 600,
-                                                                        border: source.clientName ? '1px solid #C7D2FE' : '1px solid #E5E7EB'
+                                                                        fontWeight: source.clientName ? 500 : 400,
+                                                                        border: '1px solid var(--border-color)',
+                                                                        opacity: source.clientName ? 1 : 0.6
                                                                     }}
+                                                                    className="client-badge"
                                                                 >
-                                                                    <Settings size={10} />
-                                                                    {source.clientName || 'Assign Client'}
+                                                                    <span>{source.clientName || 'Assign Client'}</span>
                                                                 </div>
                                                             </div>
 
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#6B7280', fontSize: '12px' }}>
-                                                                <span style={{ fontFamily: 'monospace' }}>{source.accountId}</span>
+                                                            <div style={{ width: '1px', height: '12px', backgroundColor: 'var(--border-color)' }}></div>
+
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-muted)', fontSize: '12px' }}>
+                                                                <span style={{ fontFamily: 'monospace', opacity: 0.8 }}>{source.accountId}</span>
                                                                 {source.currency && <span>{source.currency}</span>}
-                                                                {source.googleEmail && <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }}>{source.googleEmail}</span>}
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '16px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.6 }} className="action-buttons">
                                                         <button
                                                             onClick={() => handleDelete(source.platform, source.accountId, source.googleEmail)}
                                                             style={{
-                                                                padding: '8px', borderRadius: '8px', border: '1px solid #F3F4F6',
-                                                                backgroundColor: 'white', color: '#9CA3AF', cursor: 'pointer',
+                                                                padding: '6px', borderRadius: '6px', border: 'none',
+                                                                backgroundColor: 'transparent', color: 'var(--text-muted)', cursor: 'pointer',
                                                                 transition: 'all 0.2s'
                                                             }}
-                                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.backgroundColor = '#FEF2F2'; }}
-                                                            onMouseLeave={(e) => { e.currentTarget.style.color = '#9CA3AF'; e.currentTarget.style.backgroundColor = 'white'; }}
+                                                            onMouseEnter={(e) => { e.currentTarget.style.color = '#EF4444'; e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.1)'; }}
+                                                            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.backgroundColor = 'transparent'; }}
                                                         >
                                                             <Trash2 size={16} />
                                                         </button>
@@ -1111,17 +1180,16 @@ function SourcesContent() {
                 )}
             </div>
 
-            {/* Client Naming Modal */}
+            {/* Client Naming Modal - Minimalist */}
             {editingSource && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '16px', width: '400px', padding: '32px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
-                        <h3 style={{ fontSize: '18px', fontWeight: 700, marginBottom: '8px' }}>Assign Client Name</h3>
-                        <p style={{ fontSize: '14px', color: '#666', marginBottom: '24px' }}>
-                            Group multiple accounts under one client name (e.g. "ABC Corp") so the AI agent can report on them together.
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)' }}>
+                    <div style={{ backgroundColor: 'var(--bg-card)', borderRadius: '12px', width: '400px', padding: '24px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', border: '1px solid var(--border-color)' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px', color: 'var(--text-main)' }}>Assign Client Name</h3>
+                        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '20px', lineHeight: '1.5' }}>
+                            Group multiple accounts under one client name (e.g. "ABC Corp") for unified reporting.
                         </p>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '24px' }}>
-                            <label style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Client Name</label>
                             <input
                                 autoFocus
                                 type="text"
@@ -1129,29 +1197,39 @@ function SourcesContent() {
                                 onChange={(e) => setEditingSource({ ...editingSource, clientName: e.target.value })}
                                 placeholder="e.g. Acme Corp"
                                 style={{
-                                    width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #D1D5DB', fontSize: '14px', outline: 'none'
+                                    width: '100%', padding: '10px 12px', borderRadius: '6px', border: '1px solid var(--border-color)',
+                                    fontSize: '14px', outline: 'none', backgroundColor: 'var(--bg-main)', color: 'var(--text-main)',
+                                    boxShadow: 'none'
                                 }}
                             />
                         </div>
 
-                        <div style={{ display: 'flex', gap: '12px' }}>
+                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={() => setEditingSource(null)}
-                                style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #E5E7EB', backgroundColor: 'white', fontWeight: 600, cursor: 'pointer' }}
+                                style={{
+                                    padding: '8px 16px', borderRadius: '6px', border: 'none',
+                                    backgroundColor: 'transparent', color: 'var(--text-muted)',
+                                    fontWeight: 500, cursor: 'pointer', fontSize: '13px'
+                                }}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleUpdateClientName}
-                                className="btn-primary"
-                                style={{ flex: 1, padding: '12px' }}
+                                style={{
+                                    padding: '8px 16px', borderRadius: '6px', border: 'none',
+                                    backgroundColor: 'var(--primary-color)', color: '#fff',
+                                    fontSize: '13px', fontWeight: 500, cursor: 'pointer'
+                                }}
                             >
                                 Save Changes
                             </button>
                         </div>
                     </div>
                 </div>
-            )}
+            )
+            }
 
             <ConnectPopup
                 isOpen={isPopupOpen}
@@ -1188,15 +1266,31 @@ function SourcesContent() {
                 .animate-spin { animation: spin 1s linear infinite; }
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
                 .text-primary-color { color: var(--primary-color); }
+                
+                /* Minimalist Scrollbar */
+                ::-webkit-scrollbar {
+                    width: 6px;
+                    height: 6px;
+                }
+                ::-webkit-scrollbar-track {
+                    background: transparent;
+                }
+                ::-webkit-scrollbar-thumb {
+                    background: var(--border-color);
+                    border-radius: 3px;
+                }
+                ::-webkit-scrollbar-thumb:hover {
+                    background: var(--text-muted);
+                }
             `}</style>
-        </div>
+        </div >
     );
 
 }
 
 export default function SourcesPage() {
     return (
-        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-primary-color" size={32} /></div>}>
+        <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-primary-color" size={24} /></div>}>
             <SourcesContent />
         </Suspense>
     );

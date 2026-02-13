@@ -4,19 +4,32 @@ import { getUserIdFromRequest } from '@/lib/auth';
 
 // Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../../../../../SyncMaster.json';
-const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
+import type { SyncMasterConfig } from '@/types/syncmaster';
+
+const typedCredentials = credentialsFile as SyncMasterConfig;
+const credentials = typedCredentials.web || typedCredentials.installed;
+
+if (!credentials) {
+    throw new Error('Invalid SyncMaster.json configuration: missing web or installed credentials');
+}
 
 export async function GET(request: NextRequest) {
     try {
         console.log('OAuth initiation started');
-
-        // Extract userId from JWT token instead of query parameter
-        const userId = await getUserIdFromRequest(request);
-
         const { searchParams } = new URL(request.url);
+        const mode = searchParams.get('mode');
         const isSwitch = searchParams.get('switch') === 'true';
 
-        console.log('UserId:', userId, 'Switch mode:', isSwitch);
+        // Default to userId for linking, but allow 'login' mode
+        let userIdString = 'login';
+
+        if (mode !== 'login') {
+            // Extract userId from JWT token instead of query parameter
+            const userId = await getUserIdFromRequest(request);
+            userIdString = userId.toString();
+        }
+
+        console.log('Mode:', mode, 'UserId/State:', userIdString, 'Switch mode:', isSwitch);
         console.log('Credentials loaded:', {
             client_id: credentials.client_id ? 'present' : 'missing',
             client_secret: credentials.client_secret ? 'present' : 'missing',
@@ -42,7 +55,7 @@ export async function GET(request: NextRequest) {
         const authorizationUrl = oauth2Client.generateAuthUrl({
             access_type: 'offline',
             scope: scopes,
-            state: userId.toString(), // Pass user ID in state
+            state: userIdString, // Pass user ID or 'login' in state
             include_granted_scopes: true,
             prompt: isSwitch ? 'select_account' : undefined
         });

@@ -115,14 +115,14 @@ const Header: React.FC<HeaderProps> = ({ pageName, extended, maxWidth, stationar
                                     width: '100%',
                                     padding: '10px 12px 10px 38px',
                                     fontSize: '13px',
-                                    backgroundColor: isFocused ? 'white' : 'rgba(0,0,0,0.04)',
+                                    backgroundColor: isFocused ? 'var(--bg-card)' : 'var(--bg-hover)',
                                     border: '1px solid',
-                                    borderColor: isFocused ? 'var(--primary-color)' : 'transparent',
+                                    borderColor: isFocused ? 'var(--primary-color)' : 'var(--border-color)',
                                     borderRadius: '10px',
                                     outline: 'none',
                                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     color: 'var(--text-main)',
-                                    boxShadow: isFocused ? '0 4px 12px rgba(0, 128, 96, 0.08)' : 'none'
+                                    boxShadow: isFocused ? '0 4px 12px var(--primary-glow)' : 'none'
                                 }}
                                 onFocus={() => setIsFocused(true)}
                                 onBlur={() => setIsFocused(false)}
@@ -136,7 +136,7 @@ const Header: React.FC<HeaderProps> = ({ pageName, extended, maxWidth, stationar
                                 alignItems: 'center',
                                 gap: '2px',
                                 padding: '2px 6px',
-                                backgroundColor: 'white',
+                                backgroundColor: 'var(--bg-card)',
                                 border: '1px solid var(--border-color)',
                                 borderRadius: '4px',
                                 pointerEvents: 'none',
@@ -182,7 +182,7 @@ const Header: React.FC<HeaderProps> = ({ pageName, extended, maxWidth, stationar
                                     height: '6px',
                                     backgroundColor: 'var(--error-color)',
                                     borderRadius: '50%',
-                                    border: '1.5px solid white'
+                                    border: '1.5px solid var(--bg-card)'
                                 }}></div>
                             </button>
 

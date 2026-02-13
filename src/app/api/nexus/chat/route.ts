@@ -30,11 +30,12 @@ export async function POST(request: NextRequest) {
 
         const allMessages = [...historyMessages, newUserMessage];
 
-        // Always use Deep Reasoning Agent
-        console.log("🚀 Engaging Deep Reasoning Agent (Stateless Mode)");
-        const { deepReasoningGraph } = await import('@/lib/nexus/deep-agent');
+        // Use Standard Agent
+        console.log("⚡ Engaging Fast Standard Agent");
+        const { standardAgentGraph } = await import('@/lib/nexus/standard-agent');
+        const graph = standardAgentGraph;
 
-        let eventStream = deepReasoningGraph.streamEvents(
+        let eventStream = (graph as any).streamEvents(
             {
                 messages: allMessages,
                 plan: [],
@@ -45,7 +46,7 @@ export async function POST(request: NextRequest) {
                 permissionGranted: approvalDecision === 'approved',
                 cachedToolResults: {},
                 spreadsheetId: spreadsheetId || ""
-            },
+            } as any,
             {
                 version: "v2",
                 recursionLimit: 150,
@@ -64,8 +65,23 @@ export async function POST(request: NextRequest) {
                     for await (const event of eventStream) {
                         const eventType = event.event;
 
-                        // 1. Stream text chunks ONLY from workers (not supervisor)
-                        if (eventType === "on_chat_model_stream") {
+                        // 1. Granular Node Start Tracking (New: Show what the agent is currently doing)
+                        if (eventType === "on_chain_start" && ["planner", "analyst", "supervisor", "tools"].includes(event.name)) {
+                            const nodeNameMap: Record<string, string> = {
+                                'planner': 'Strategizing Execution Plan',
+                                'analyst': 'Analyzing Data',
+                                'supervisor': 'Alex is Routing',
+                                'tools': 'Executing Data Tools'
+                            };
+                            controller.enqueue(encoder.encode(JSON.stringify({
+                                type: 'node_start',
+                                node: event.name,
+                                status: nodeNameMap[event.name]
+                            }) + '\n'));
+                        }
+
+                        // 2. Stream text chunks ONLY from workers (not supervisor)
+                        else if (eventType === "on_chat_model_stream") {
                             const isWorker = event.metadata?.agentTag === "worker";
                             if (isWorker) {
                                 const chunk = event.data.chunk;
@@ -78,8 +94,8 @@ export async function POST(request: NextRequest) {
                             }
                         }
 
-                        // 2. Capture Router/Supervisor/Planner Reasoning
-                        else if (eventType === "on_chain_end" && (event.name === "supervisor" || event.name === "router" || event.name === "planner")) {
+                        // 3. Capture Router/Supervisor/Planner Reasoning
+                        else if (eventType === "on_chain_end" && (event.name === "supervisor" || event.name === "router" || event.name === "planner" || event.name === "analyst")) {
                             const output = event.data.output;
 
                             // Planner specific output
@@ -87,7 +103,8 @@ export async function POST(request: NextRequest) {
                                 controller.enqueue(encoder.encode(JSON.stringify({
                                     type: 'supervisor_decision',
                                     next: 'analyst',
-                                    reasoning: `**Plan Created:**\n${output.plan.join('\n')}`
+                                    reasoning: `**Plan Created:**\n${output.plan.join('\n')}`,
+                                    todo_list: output.todo_list
                                 }) + '\n'));
                             }
                             // Supervisor/Router/Analyst output
@@ -101,7 +118,7 @@ export async function POST(request: NextRequest) {
                             }
                         }
 
-                        // 3. Tool Logs
+                        // 4. Tool Logs
                         else if (eventType === "on_tool_start") {
                             controller.enqueue(encoder.encode(JSON.stringify({
                                 type: 'tool_start',
@@ -115,7 +132,7 @@ export async function POST(request: NextRequest) {
                             }) + '\n'));
                         }
 
-                        // 4. Detect approval requests from state changes
+                        // 5. Detect approval requests from state changes
                         else if (eventType === "on_chain_end" && event.name === "approvalChecker") {
                             const output = event.data.output;
                             if (output?.pendingApproval) {

@@ -3,17 +3,27 @@ import { google } from 'googleapis';
 import prisma from '@/lib/prisma';
 import fs from 'fs';
 import path from 'path';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-this-in-production';
 
 // Load credentials from SyncMaster.json - handle both 'web' and 'installed' formats
 import credentialsFile from '../../../../../../SyncMaster.json';
-const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
+import type { SyncMasterConfig } from '@/types/syncmaster';
+
+const typedCredentials = credentialsFile as SyncMasterConfig;
+const credentials = typedCredentials.web || typedCredentials.installed;
+
+if (!credentials) {
+    throw new Error('Invalid SyncMaster.json configuration: missing web or installed credentials');
+}
 
 export async function GET(request: NextRequest) {
     try {
         console.log('OAuth callback started');
         const { searchParams } = new URL(request.url);
         const code = searchParams.get('code');
-        const state = searchParams.get('state'); // userId
+        const state = searchParams.get('state'); // userId or 'login'
 
         console.log('Code:', code ? 'present' : 'missing');
         console.log('State:', state);
@@ -23,10 +33,16 @@ export async function GET(request: NextRequest) {
             return NextResponse.redirect(new URL('/sources?error=auth_failed', request.url));
         }
 
-        const userId = parseInt(state);
-        if (isNaN(userId)) {
-            console.log('Invalid userId:', state);
-            return NextResponse.redirect(new URL('/sources?error=invalid_user', request.url));
+        // Check if we are in login mode
+        const isLoginMode = state === 'login';
+        let userId: number | null = null;
+
+        if (!isLoginMode) {
+            userId = parseInt(state);
+            if (isNaN(userId)) {
+                console.log('Invalid userId:', state);
+                return NextResponse.redirect(new URL('/sources?error=invalid_user', request.url));
+            }
         }
 
         console.log('Creating OAuth2 client with redirect URI:', `${request.nextUrl.origin}/api/google/oauth/callback`);
@@ -51,13 +67,93 @@ export async function GET(request: NextRequest) {
         const oauth2 = google.oauth2({ version: 'v2', auth: oauth2Client });
         const userInfo = await oauth2.userinfo.get();
         const userEmail = userInfo.data.email;
+        const userName = userInfo.data.name || 'Google User';
 
-        console.log('User email:', userEmail);
+        console.log('User info:', { email: userEmail, name: userName });
 
+        if (!userEmail) {
+            throw new Error('Google account has no email address');
+        }
+
+        // Logic for Login Mode
+        if (isLoginMode) {
+            console.log('Handling Login Mode');
+
+            // Find or create the user
+            let user = await prisma.user.findUnique({
+                where: { email: userEmail }
+            });
+
+            if (!user) {
+                console.log('User not found, creating new user for:', userEmail);
+                const [firstName, ...lastNameParts] = userName.split(' ');
+                user = await prisma.user.create({
+                    data: {
+                        email: userEmail,
+                        firstName: firstName || 'Google',
+                        lastName: lastNameParts.join(' ') || 'User',
+                        password: '', // No password for OAuth users
+                    }
+                });
+            } else {
+                console.log('User found:', user.id);
+            }
+
+            userId = user.id;
+
+            // Generate JWT
+            const token = jwt.sign(
+                { userId: user.id, email: user.email },
+                JWT_SECRET,
+                { expiresIn: '7d' }
+            );
+
+            // Set the cookie
+            // We can't set cookies on NextResponse.redirect easily in a way that respects Next.js middleware sometimes, 
+            // but we can make a response object and return it.
+            const response = NextResponse.redirect(new URL('/romeo-charge', request.url));
+            response.cookies.set('token', token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === 'production',
+                sameSite: 'lax',
+                maxAge: 60 * 60 * 24 * 7, // 7 days
+                path: '/',
+            });
+
+            // SAVE TOKENS for this user too (so ads/sheets work)
+            console.log('Storing OAuth tokens for logged in user...');
+            await prisma.oAuthToken.upsert({
+                where: {
+                    userId_provider_email: {
+                        userId: user.id,
+                        provider: 'google',
+                        email: userEmail,
+                    },
+                },
+                update: {
+                    accessToken: tokens.access_token!,
+                    refreshToken: tokens.refresh_token || null,
+                    expiresAt: new Date(tokens.expiry_date!),
+                    updatedAt: new Date(),
+                },
+                create: {
+                    userId: user.id,
+                    provider: 'google',
+                    accessToken: tokens.access_token!,
+                    refreshToken: tokens.refresh_token || null,
+                    expiresAt: new Date(tokens.expiry_date!),
+                    email: userEmail,
+                },
+            });
+
+            return response;
+        }
+
+        // Logic for Link Mode (Existing logic)
         // Verify user exists before storing tokens
-        console.log('Verifying user exists...');
-        const user = await (prisma as any).user.findUnique({
-            where: { id: userId }
+        console.log('Verifying user exists (Link Mode)...');
+        const user = await prisma.user.findUnique({
+            where: { id: userId! }
         });
 
         if (!user) {
@@ -66,12 +162,11 @@ export async function GET(request: NextRequest) {
         }
 
         console.log('User verified, storing tokens in database...');
-        // Store tokens in database - using email in primary key if possible, 
-        // or just treating it as a unique record for this specific email.
-        await (prisma as any).oAuthToken.upsert({
+        // Store tokens in database
+        await prisma.oAuthToken.upsert({
             where: {
                 userId_provider_email: {
-                    userId: userId,
+                    userId: userId!,
                     provider: 'google',
                     email: userEmail || null,
                 },
@@ -83,7 +178,7 @@ export async function GET(request: NextRequest) {
                 updatedAt: new Date(),
             },
             create: {
-                userId: userId,
+                userId: userId!,
                 provider: 'google',
                 accessToken: tokens.access_token!,
                 refreshToken: tokens.refresh_token || null,
@@ -93,8 +188,9 @@ export async function GET(request: NextRequest) {
         });
 
         console.log('Tokens stored successfully, redirecting to success page');
-        // Redirect to success page which will message the opener
+        // Redirect to success page
         return NextResponse.redirect(new URL(`/google-success?email=${encodeURIComponent(userEmail || '')}`, request.url));
+
     } catch (error) {
         console.error('OAuth callback error:', error);
         const err = error as any;

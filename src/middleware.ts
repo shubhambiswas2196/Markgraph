@@ -6,7 +6,7 @@ export function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     // Define protected routes
-    const protectedRoutes = ['/nexus', '/dashboard', '/profile'];
+    const protectedRoutes = ['/nexus', '/dashboard', '/profile', '/romeo-charge'];
 
     // Define auth routes (unavailable to logged-in users)
     const authRoutes = ['/login', '/register'];
@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
     }
 
     if (isAuthRoute && token) {
-        return NextResponse.redirect(new URL('/nexus', request.url));
+        return NextResponse.redirect(new URL('/romeo-charge', request.url));
     }
 
     return NextResponse.next();

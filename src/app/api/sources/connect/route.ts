@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
             // We use empty string for Meta to satisfy the constraint (can't use null in where clause)
             const currentGoogleEmail = platform === 'google-ads' ? (googleEmail || '') : '';
 
-            await (prisma as any).dataSource.upsert({
+            await prisma.dataSource.upsert({
                 where: {
                     userId_sourceType_accountId_googleEmail: {
                         userId: userId,

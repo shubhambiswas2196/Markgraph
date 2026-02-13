@@ -29,13 +29,67 @@ async function getAuth(userId: number) {
 export const create_google_sheet = tool(
     async ({ title }, config) => {
         const userId = config.configurable?.userId;
-        if (!userId) return "Error: User ID not found.";
+        if (!userId) return JSON.stringify({ status: 'error', message: 'User ID not found' });
+
+        // Validate title
+        if (!title || title.trim().length === 0) {
+            return JSON.stringify({
+                status: 'error',
+                message: 'Title cannot be empty. Please provide a valid spreadsheet title.'
+            });
+        }
+
+        if (title.length > 255) {
+            return JSON.stringify({
+                status: 'error',
+                message: 'Title too long (max 255 characters). Please use a shorter title.'
+            });
+        }
+
         try {
             const auth = await getAuth(userId);
             const res = await createGoogleSheet(auth, title);
-            return JSON.stringify({ status: 'success', message: `Spreadsheet '${title}' created.`, url: res.spreadsheetUrl, spreadsheetId: res.spreadsheetId });
+            return JSON.stringify({
+                status: 'success',
+                message: `✅ Spreadsheet '${title}' created successfully.`,
+                url: res.spreadsheetUrl,
+                spreadsheetId: res.spreadsheetId
+            });
         } catch (e: any) {
-            return `Error creating sheet: ${e.message}`;
+            // Categorize errors for better AI understanding
+            if (e.message.includes('invalid_grant') || e.message.includes('Token') || e.message.includes('401')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'AUTH_ERROR',
+                    message: 'Authentication failed. User needs to reconnect Google account.',
+                    action: 'Please ask the user to reconnect their Google account in Settings.'
+                });
+            }
+
+            if (e.message.includes('permission') || e.message.includes('403')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'PERMISSION_ERROR',
+                    message: 'Insufficient permissions to access Google Sheets.',
+                    action: 'User needs to grant Sheets API access during OAuth.'
+                });
+            }
+
+            if (e.message.includes('quota') || e.message.includes('429')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'QUOTA_ERROR',
+                    message: 'Google Sheets API quota exceeded.',
+                    action: 'Please wait a few minutes and try again.'
+                });
+            }
+
+            return JSON.stringify({
+                status: 'error',
+                type: 'UNKNOWN_ERROR',
+                message: `Error creating sheet: ${e.message}`,
+                action: 'Please try again or check the error details.'
+            });
         }
     },
     {
@@ -266,14 +320,30 @@ export const add_spreadsheet_chart = tool(
                                 chartType,
                                 legendPosition: 'BOTTOM_LEGEND',
                                 axis: [{ position: 'BOTTOM_AXIS', title: 'Data' }, { position: 'LEFT_AXIS', title: 'Value' }],
-                                domains: [{ domain: { sourceRange: { sources: [{ sheetId: 0, startRowIndex: 0, endRowIndex: 10, startColumnIndex: 0, endColumnIndex: 1 }] } } }],
-                                series: [{ series: { sourceRange: { sources: [{ sheetId: 0, startRowIndex: 0, endRowIndex: 10, startColumnIndex: 1, endColumnIndex: 2 }] } }, targetAxis: 'LEFT_AXIS' }]
+                                domains: [{ domain: { sourceRange: { sources: [parseRange(range)] } } }],
+                                series: [{ series: { sourceRange: { sources: [parseRange(range, true)] } }, targetAxis: 'LEFT_AXIS' }]
                             }
                         },
                         position: { newSheet: true }
                     }
                 }
             };
+
+            // Helper to parse A1 range to GridRange object
+            function parseRange(a1Range: string, isSeries = false) {
+                // Simplified A1 parser (Sheet1!A1:B10)
+                const [sheetName, range] = a1Range.includes('!') ? a1Range.split('!') : ['Sheet1', a1Range];
+                const [start, end] = range.split(':');
+                const startCol = start.charCodeAt(0) - 65;
+                const startRow = parseInt(start.substring(1)) - 1;
+                const endCol = end.charCodeAt(0) - 65 + 1;
+                const endRow = parseInt(end.substring(1));
+
+                if (isSeries) {
+                    return { sheetId: 0, startRowIndex: startRow, endRowIndex: endRow, startColumnIndex: startCol + 1, endColumnIndex: endCol };
+                }
+                return { sheetId: 0, startRowIndex: startRow, endRowIndex: endRow, startColumnIndex: startCol, endColumnIndex: startCol + 1 };
+            }
 
             await batchUpdateSheet(auth, spreadsheetId, [request]);
             return JSON.stringify({ status: 'success', message: `${chartType} chart '${title}' created.` });
@@ -294,7 +364,7 @@ export const add_spreadsheet_chart = tool(
 );
 
 export const format_spreadsheet = tool(
-    async ({ spreadsheetId, sheetId = 0, bold, resizeColumns, fontSize, fontFamily, fontColor, backgroundColor, startRow, endRow, startCol, endCol }, config) => {
+    async ({ spreadsheetId, sheetId = 0, bold, resizeColumns, fontSize, fontFamily, fontColor, backgroundColor, horizontalAlignment, verticalAlignment, borders, startRow, endRow, startCol, endCol }, config) => {
         const userId = config.configurable?.userId;
         if (!userId) return "Error: User ID not found.";
         try {
@@ -315,13 +385,24 @@ export const format_spreadsheet = tool(
             if (fontFamily) userEnteredFormat.textFormat.fontFamily = fontFamily;
             if (fontColor) userEnteredFormat.textFormat.foregroundColor = fontColor;
             if (backgroundColor) userEnteredFormat.backgroundColor = backgroundColor;
+            if (horizontalAlignment) userEnteredFormat.horizontalAlignment = horizontalAlignment;
+            if (verticalAlignment) userEnteredFormat.verticalAlignment = verticalAlignment;
 
-            if (Object.keys(userEnteredFormat.textFormat).length > 0 || backgroundColor) {
+            if (borders) {
+                userEnteredFormat.borders = {
+                    top: { style: 'SOLID', color: { red: 0, green: 0, blue: 0 } },
+                    bottom: { style: 'SOLID', color: { red: 0, green: 0, blue: 0 } },
+                    left: { style: 'SOLID', color: { red: 0, green: 0, blue: 0 } },
+                    right: { style: 'SOLID', color: { red: 0, green: 0, blue: 0 } }
+                };
+            }
+
+            if (Object.keys(userEnteredFormat.textFormat).length > 0 || backgroundColor || horizontalAlignment || verticalAlignment || borders) {
                 requests.push({
                     repeatCell: {
                         range,
                         cell: { userEnteredFormat },
-                        fields: 'userEnteredFormat(textFormat,backgroundColor)'
+                        fields: 'userEnteredFormat(textFormat,backgroundColor,horizontalAlignment,verticalAlignment,borders)'
                     }
                 });
             }
@@ -353,10 +434,13 @@ export const format_spreadsheet = tool(
             fontFamily: z.string().optional().describe('Font family name'),
             fontColor: z.object({ red: z.number(), green: z.number(), blue: z.number() }).optional().describe('RGB color for text'),
             backgroundColor: z.object({ red: z.number(), green: z.number(), blue: z.number() }).optional().describe('RGB color for background'),
-            startRow: z.number().optional(),
-            endRow: z.number().optional(),
-            startCol: z.number().optional(),
-            endCol: z.number().optional(),
+            horizontalAlignment: z.enum(['LEFT', 'CENTER', 'RIGHT']).optional().describe('Horizontal alignment'),
+            verticalAlignment: z.enum(['TOP', 'MIDDLE', 'BOTTOM']).optional().describe('Vertical alignment'),
+            borders: z.boolean().optional().describe('Apply solid black borders to cells'),
+            startRow: z.number().optional().describe('0-indexed start row'),
+            endRow: z.number().optional().describe('0-indexed end row'),
+            startCol: z.number().optional().describe('0-indexed start column'),
+            endCol: z.number().optional().describe('0-indexed end column'),
             resizeColumns: z.boolean().optional().describe('Auto-resize columns in range')
         })
     }
@@ -402,6 +486,105 @@ export const set_spreadsheet_colors = tool(
     }
 );
 
+export const export_metrics_to_sheets = tool(
+    async ({ title, data, headers }, config) => {
+        const userId = config.configurable?.userId;
+        if (!userId) return JSON.stringify({ status: 'error', message: 'User ID not found' });
+
+        try {
+            const auth = await getAuth(userId);
+
+            // Create sheet
+            const sheet = await createGoogleSheet(auth, title);
+            const spreadsheetId = sheet.spreadsheetId!;
+
+            // Add headers
+            if (headers && headers.length > 0) {
+                await appendValues(auth, spreadsheetId, 'Sheet1!A1', [headers]);
+
+                // Format headers (bold, background color)
+                await batchUpdateSheet(auth, spreadsheetId, [{
+                    repeatCell: {
+                        range: { sheetId: 0, startRowIndex: 0, endRowIndex: 1, startColumnIndex: 0, endColumnIndex: headers.length },
+                        cell: {
+                            userEnteredFormat: {
+                                textFormat: { bold: true },
+                                backgroundColor: { red: 0.9, green: 0.9, blue: 0.9 }
+                            }
+                        },
+                        fields: 'userEnteredFormat(textFormat,backgroundColor)'
+                    }
+                }]);
+            }
+
+            // Add data
+            if (data && data.length > 0) {
+                await appendValues(auth, spreadsheetId, 'Sheet1!A2', data);
+            }
+
+            // Auto-resize columns
+            await batchUpdateSheet(auth, spreadsheetId, [{
+                autoResizeDimensions: {
+                    dimensions: { sheetId: 0, dimension: 'COLUMNS', startIndex: 0, endIndex: headers?.length || 10 }
+                }
+            }]);
+
+            return JSON.stringify({
+                status: 'success',
+                message: `✅ Successfully exported ${data.length} rows to Google Sheets`,
+                url: sheet.spreadsheetUrl,
+                spreadsheetId: spreadsheetId,
+                rowCount: data.length,
+                columnCount: headers?.length || 0
+            });
+        } catch (e: any) {
+            // Categorize errors for better AI understanding
+            if (e.message.includes('invalid_grant') || e.message.includes('Token') || e.message.includes('401')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'AUTH_ERROR',
+                    message: 'Authentication failed. User needs to reconnect Google account.',
+                    action: 'Please ask the user to reconnect their Google account in Settings.'
+                });
+            }
+
+            if (e.message.includes('permission') || e.message.includes('403')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'PERMISSION_ERROR',
+                    message: 'Insufficient permissions to access Google Sheets.',
+                    action: 'User needs to grant Sheets API access during OAuth.'
+                });
+            }
+
+            if (e.message.includes('quota') || e.message.includes('429')) {
+                return JSON.stringify({
+                    status: 'error',
+                    type: 'QUOTA_ERROR',
+                    message: 'Google Sheets API quota exceeded.',
+                    action: 'Please wait a few minutes and try again.'
+                });
+            }
+
+            return JSON.stringify({
+                status: 'error',
+                type: 'UNKNOWN_ERROR',
+                message: e.message,
+                action: 'Please try again or check the error details.'
+            });
+        }
+    },
+    {
+        name: 'export_metrics_to_sheets',
+        description: 'Export advertising metrics data to a new Google Sheet with automatic formatting. This is a HIGH-LEVEL tool that creates a sheet, adds headers with bold formatting, adds data, and auto-resizes columns all in ONE call. Use this instead of chaining multiple tools for exporting campaign data.',
+        schema: z.object({
+            title: z.string().describe('Title for the new spreadsheet (e.g., "Campaign Performance - Jan 2026")'),
+            headers: z.array(z.string()).describe('Column headers (e.g., ["Campaign", "Impressions", "Clicks", "Cost"])'),
+            data: z.array(z.array(z.union([z.string(), z.number(), z.boolean()]))).describe('2D array of data rows')
+        })
+    }
+);
+
 export const transfer_to_google_ads = tool(
     async () => {
         return "Transferring to Google Ads Agent...";
@@ -415,6 +598,7 @@ export const transfer_to_google_ads = tool(
 
 export const sheetsTools = [
     create_google_sheet,
+    export_metrics_to_sheets,
     append_to_sheet,
     update_spreadsheet_values,
     read_sheet_data,

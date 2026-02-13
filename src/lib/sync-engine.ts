@@ -7,10 +7,10 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
         console.log(`[SyncEngine] Starting sync for ${accountId}, Status: SYNCING`);
 
         // Update status to SYNCING
-        await (prisma as any).dataSource.update({
+        await prisma.dataSource.update({
             where: { id: sourceId },
             data: { syncStatus: 'SYNCING' }
-        }).catch((e: any) => console.warn('Failed to update syncStatus to SYNCING:', e.message));
+        }).catch((e: Error) => console.warn('Failed to update syncStatus to SYNCING:', e.message));
 
         const client = await getGoogleAdsClient();
         const tokens = await getUserTokens(userId);
@@ -59,7 +59,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     const ops = cmpResult.map((row: any) => {
                         const date = new Date(row.segments.date);
                         const hour = parseInt(row.segments.hour || 0);
-                        return (prisma as any).campaignMetrics.upsert({
+                        return prisma.campaignMetrics.upsert({
                             where: { dataSourceId_campaignId_date_hour: { dataSourceId: sourceId, campaignId: row.campaign.id.toString(), date, hour } },
                             update: {
                                 impressions: parseInt(row.metrics?.impressions || 0),
@@ -85,7 +85,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                             }
                         });
                     });
-                    await prisma.$transaction(ops as any);
+                    await prisma.$transaction(ops);
                 }
             } catch (err: any) {
                 console.error(`[SyncEngine] Campaign sync failed batch ${startStr}:`, err.message);
@@ -114,7 +114,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     const agOps = agResult.map((row: any) => {
                         const date = new Date(row.segments.date);
                         const hour = parseInt(row.segments.hour || 0);
-                        return (prisma as any).adGroupMetrics.upsert({
+                        return prisma.adGroupMetrics.upsert({
                             where: { dataSourceId_adGroupId_date_hour: { dataSourceId: sourceId, adGroupId: row.ad_group.id.toString(), date, hour } },
                             update: {
                                 impressions: parseInt(row.metrics?.impressions || 0),
@@ -142,7 +142,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                             }
                         });
                     });
-                    await prisma.$transaction(agOps as any);
+                    await prisma.$transaction(agOps);
                 }
             } catch (err: any) {
                 console.error(`[SyncEngine] AdGroup sync failed batch ${startStr}:`, err.message);
@@ -195,7 +195,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     }
                 }));
                 for (const op of ops) {
-                    await (prisma as any).genderMetrics.upsert(op);
+                    await prisma.genderMetrics.upsert(op);
                 }
             }
         } catch (err: any) { console.error(`[SyncEngine] Gender sync failed:`, err.message); }
@@ -237,7 +237,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     }
                 }));
                 for (const op of ops) {
-                    await (prisma as any).ageRangeMetrics.upsert(op);
+                    await prisma.ageRangeMetrics.upsert(op);
                 }
             }
         } catch (err: any) { console.error(`[SyncEngine] Age sync failed:`, err.message); }
@@ -279,7 +279,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     }
                 }));
                 for (const op of ops) {
-                    await (prisma as any).incomeRangeMetrics.upsert(op);
+                    await prisma.incomeRangeMetrics.upsert(op);
                 }
             }
         } catch (err: any) { console.error(`[SyncEngine] Income sync failed:`, err.message); }
@@ -321,7 +321,7 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     }
                 }));
                 for (const op of ops) {
-                    await (prisma as any).deviceMetrics.upsert(op);
+                    await prisma.deviceMetrics.upsert(op);
                 }
             }
         } catch (err: any) { console.error(`[SyncEngine] Device sync failed:`, err.message); }
@@ -378,26 +378,26 @@ export async function syncMetrics(userId: number, sourceId: number, accountId: s
                     }
                 }));
                 for (const op of ops) {
-                    await (prisma as any).locationMetrics.upsert(op);
+                    await prisma.locationMetrics.upsert(op);
                 }
             }
         } catch (err: any) { console.error(`[SyncEngine] Location sync failed:`, err.message); }
 
         // Sync Success
-        await (prisma as any).dataSource.update({
+        await prisma.dataSource.update({
             where: { id: sourceId },
             data: { syncStatus: 'ACTIVE', lastSyncedAt: new Date() }
-        }).catch((e: any) => console.warn('Failed to update syncStatus to ACTIVE:', e.message));
+        }).catch((e: Error) => console.warn('Failed to update syncStatus to ACTIVE:', e.message));
 
         console.log(`[SyncEngine] Sync COMPLETED for ${accountId}`);
         return true;
     } catch (err) {
         console.error(`[SyncEngine] Error syncing ${accountId}:`, err);
         // Sync Failed
-        await (prisma as any).dataSource.update({
+        await prisma.dataSource.update({
             where: { id: sourceId },
             data: { syncStatus: 'FAILED' }
-        }).catch((e: any) => console.error('Failed to update error status:', e));
+        }).catch((e: Error) => console.error('Failed to update error status:', e));
         return false;
     }
 }

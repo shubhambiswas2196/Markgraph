@@ -133,7 +133,7 @@ const root = {
     campaigns: async ({ accountId, dateRange }: any, context: any) => {
         try {
             // 1. Get Source ID for DB queries
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
 
@@ -170,7 +170,7 @@ const root = {
                 };
             }
 
-            const metrics = await (prisma as any).campaignMetrics.groupBy({
+            const metrics = await prisma.campaignMetrics.groupBy({
                 by: ['campaignId', 'campaignName', 'status'],
                 where: where,
                 _sum: {
@@ -238,7 +238,7 @@ const root = {
 
     hourlyPerformance: async ({ accountId, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return [];
@@ -257,7 +257,7 @@ const root = {
                 };
             }
 
-            const metrics = await (prisma as any).campaignMetrics.groupBy({
+            const metrics = await prisma.campaignMetrics.groupBy({
                 by: ['hour'],
                 where: where,
                 _sum: {
@@ -288,7 +288,7 @@ const root = {
 
     demographics: async ({ accountId, type, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return [];
@@ -304,11 +304,13 @@ const root = {
             const byField = type.toLowerCase() === 'gender' ? 'gender' :
                 type.toLowerCase() === 'age' ? 'ageRange' : 'incomeRange';
 
-            const model = (prisma as any)[modelName];
+            // Type-safe dynamic model access
+            const prismaModels = prisma as Record<string, any>;
+            const model = prismaModels[modelName];
             if (!model) {
                 console.error(`Prisma model "${modelName}" is undefined. Retrying with capitalized...`);
                 const altName = modelName.charAt(0).toUpperCase() + modelName.slice(1);
-                const retryModel = (prisma as any)[altName];
+                const retryModel = prismaModels[altName];
                 if (!retryModel) throw new Error(`Prisma model "${modelName}" not found on client.`);
                 metrics = await retryModel.groupBy({
                     by: [byField],
@@ -341,7 +343,7 @@ const root = {
 
     devicePerformance: async ({ accountId, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return [];
@@ -351,7 +353,7 @@ const root = {
                 where.date = { gte: new Date(dateRange.startDate), lte: new Date(dateRange.endDate) };
             }
 
-            const model = (prisma as any).deviceMetrics || (prisma as any).DeviceMetrics;
+            const model = prisma.deviceMetrics || prisma.DeviceMetrics;
             if (!model) throw new Error('Prisma model "deviceMetrics" not found on client.');
 
             const metrics = await model.groupBy({
@@ -378,7 +380,7 @@ const root = {
 
     geographicPerformance: async ({ accountId, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return [];
@@ -388,7 +390,7 @@ const root = {
                 where.date = { gte: new Date(dateRange.startDate), lte: new Date(dateRange.endDate) };
             }
 
-            const model = (prisma as any).locationMetrics || (prisma as any).LocationMetrics;
+            const model = prisma.locationMetrics || prisma.LocationMetrics;
             if (!model) {
                 const keys = Object.keys(prisma).filter(k => !k.startsWith('_') && !k.startsWith('$'));
                 throw new Error(`Prisma model "locationMetrics" not found. Available: ${keys.join(', ')}`);
@@ -418,7 +420,7 @@ const root = {
 
     adGroups: async ({ accountId, campaignId, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return [];
@@ -438,7 +440,7 @@ const root = {
                 where.campaignId = campaignId;
             }
 
-            const metrics = await (prisma as any).adGroupMetrics.groupBy({
+            const metrics = await prisma.adGroupMetrics.groupBy({
                 by: ['adGroupId', 'adGroupName', 'campaignId', 'status'],
                 where: where,
                 _sum: {
@@ -492,7 +494,7 @@ const root = {
             const client = await getGoogleAdsClient();
 
             // Get managerId for this source
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             const loginId = source?.managerId || accountId;
@@ -549,7 +551,7 @@ const root = {
             const client = await getGoogleAdsClient();
 
             // Get managerId for this source
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             const loginId = source?.managerId || accountId;
@@ -605,7 +607,7 @@ const root = {
 
     account: async ({ accountId, dateRange }: any, context: any) => {
         try {
-            const source = await (prisma as any).dataSource.findFirst({
+            const source = await prisma.dataSource.findFirst({
                 where: { userId: parseInt(context.userId), accountId: accountId }
             });
             if (!source) return null;
@@ -622,7 +624,7 @@ const root = {
                 where.date = { gte: new Date(dateRange.startDate), lte: new Date(dateRange.endDate) };
             }
 
-            const agg = await (prisma as any).campaignMetrics.aggregate({
+            const agg = await prisma.campaignMetrics.aggregate({
                 where: where,
                 _sum: {
                     impressions: true,
@@ -652,7 +654,7 @@ const root = {
 
     accounts: async ({ userId }: any) => {
         try {
-            const dataSources = await (prisma as any).dataSource.findMany({
+            const dataSources = await prisma.dataSource.findMany({
                 where: {
                     userId: parseInt(userId),
                     sourceType: 'google-ads',
@@ -669,7 +671,7 @@ const root = {
                 const startDate = new Date();
                 startDate.setDate(startDate.getDate() - 30);
 
-                const agg = await (prisma as any).campaignMetrics.aggregate({
+                const agg = await prisma.campaignMetrics.aggregate({
                     where: {
                         dataSourceId: source.id,
                         date: { gte: startDate, lte: endDate }

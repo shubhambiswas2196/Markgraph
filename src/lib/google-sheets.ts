@@ -1,7 +1,12 @@
 import { google } from 'googleapis';
 import credentialsFile from '../../SyncMaster.json';
 
-const credentials = credentialsFile.installed;
+// Support both 'web' and 'installed' OAuth configurations
+const credentials = (credentialsFile as any).web || (credentialsFile as any).installed;
+
+if (!credentials) {
+    throw new Error('No valid OAuth credentials found in SyncMaster.json. Please ensure either "web" or "installed" configuration exists.');
+}
 
 export function getGoogleOAuth2Client() {
     return new google.auth.OAuth2(
@@ -27,22 +32,29 @@ export async function createGoogleSheet(auth: any, title: string) {
         });
 
         const spreadsheetId = spreadsheet.data.spreadsheetId;
+        const manualUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
 
-        // Make it public/editable
+        // Try to make it public/editable, but don't fail if it's restricted by Org Policy
         if (spreadsheetId) {
-            await drive.permissions.create({
-                fileId: spreadsheetId,
-                requestBody: {
-                    role: 'writer',
-                    type: 'anyone'
-                }
-            });
+            try {
+                await drive.permissions.create({
+                    fileId: spreadsheetId,
+                    requestBody: {
+                        role: 'writer',
+                        type: 'anyone'
+                    }
+                });
+            } catch (permErr) {
+                console.warn(`[Google Sheets] Warning: Could not make sheet public (likely Org Policy). User will need to be signed in. Error: ${permErr}`);
+            }
         }
+
+        console.log(`[Google Sheets] Created sheet: ${manualUrl}`);
 
         return {
             status: 'success',
             spreadsheetId: spreadsheetId,
-            spreadsheetUrl: spreadsheet.data.spreadsheetUrl,
+            spreadsheetUrl: manualUrl, // Use robust manual URL
         };
     } catch (err: any) {
         throw new Error(`Failed to create spreadsheet: ${err.message}`);

@@ -1,0 +1,62 @@
+
+> temp-app@0.1.0 build
+> next build
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 15.8s
+   Running TypeScript ...
+   Collecting page data using 11 workers ...
+   Generating static pages using 11 workers (0/37) ...
+   Generating static pages using 11 workers (9/37) 
+   Generating static pages using 11 workers (18/37) 
+   Generating static pages using 11 workers (27/37) 
+ ✓ Generating static pages using 11 workers (37/37) in 2.1s
+   Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/blackswan/chat
+├ ƒ /api/google/insights/accounts
+├ ƒ /api/google/insights/campaigns
+├ ƒ /api/google/oauth/callback
+├ ƒ /api/google/oauth/check-auth
+├ ƒ /api/google/oauth/initiate
+├ ƒ /api/graphql
+├ ƒ /api/login
+├ ƒ /api/logout
+├ ƒ /api/me
+├ ƒ /api/meta/accounts
+├ ƒ /api/meta/oauth/callback
+├ ƒ /api/meta/oauth/initiate
+├ ƒ /api/nexus/chat
+├ ƒ /api/nexus/debug
+├ ƒ /api/nexus/multi-agent
+├ ƒ /api/nexus/reflect
+├ ƒ /api/register
+├ ƒ /api/romeo-charge/chat
+├ ƒ /api/settings/ai-config
+├ ƒ /api/settings/meta-token
+├ ƒ /api/sources/connect
+├ ƒ /api/sources/disconnect
+├ ƒ /api/sources/status
+├ ƒ /api/sources/update
+├ ƒ /api/test-db
+├ ○ /google-success
+├ ○ /login
+├ ○ /profile
+├ ○ /register
+├ ○ /romeo-charge
+├ ○ /settings
+└ ○ /sources
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

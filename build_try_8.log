@@ -1,0 +1,24 @@
+
+> temp-app@0.1.0 build
+> next build
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 15.4s
+   Running TypeScript ...
+Failed to compile.
+
+./src/lib/nexus/deep-agent.ts:272:46
+Type error: Parameter 'm' implicitly has an 'any' type.
+
+[0m [90m 270 |[39m
+ [90m 271 |[39m         [36mconst[39m result [33m=[39m [36mawait[39m toolsNode[33m.[39minvoke(modifiedState)[33m;[39m
+[31m[1m>[22m[39m[90m 272 |[39m         newToolResults [33m=[39m result[33m.[39mmessages[33m.[39mmap(m [33m=>[39m {
+ [90m     |[39m                                              [31m[1m^[22m[39m
+ [90m 273 |[39m             [36mif[39m (m [36minstanceof[39m [33mToolMessage[39m) {
+ [90m 274 |[39m                 [90m// Extract spreadsheetId if a new one was created[39m
+ [90m 275 |[39m                 [36mif[39m (m[33m.[39mname [33m===[39m [32m'create_google_sheet'[39m) {[0m
+Next.js build worker exited with code: 1 and signal: null

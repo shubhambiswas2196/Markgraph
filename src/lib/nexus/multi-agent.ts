@@ -14,6 +14,10 @@ import { getUserAiConfig } from '@/lib/ai-config';
 async function createModelForUser(userId: number) {
     const config = await getUserAiConfig(userId);
 
+    if (!config.isValid) {
+        throw new Error(config.errorMessage || "AI Configuration is invalid.");
+    }
+
     return new ChatOpenAI({
         modelName: config.model,
         apiKey: config.apiKey,
@@ -197,7 +201,13 @@ const sheetsAgent = async (state: typeof MultiAgentState.State, config: any) => 
 
     const messages = state.messages;
     const systemPrompt = `You are the Sheets Agent, an expert in Google Sheets automation and reporting.
-Use the sheetsTools to create, read, update, or format spreadsheets. Help users organize their marketing data effectively.`;
+Use the sheetsTools to create, read, update, or format spreadsheets. Help users organize their marketing data effectively.
+
+IMPORTANT - LINK FORMATTING:
+When you provide a Google Sheets URL to the user, ALWAYS format it as a markdown link like this:
+[View Report](https://docs.google.com/spreadsheets/d/...)
+
+This will display with a Google Sheets icon in the UI. Never provide raw URLs.`;
 
     const modelWithTools = userModel.bindTools(sheetsTools);
     const response = await modelWithTools.invoke([

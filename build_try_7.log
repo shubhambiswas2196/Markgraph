@@ -1,0 +1,27 @@
+
+> temp-app@0.1.0 build
+> next build
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local, .env
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 16.3s
+   Running TypeScript ...
+Failed to compile.
+
+./src/lib/nexus/deep-agent.ts:161:20
+Type error: Argument of type 'DynamicStructuredTool<ZodObject<{ title: ZodString; }, $strip>, { title: string; }, { title: string; }, string> | DynamicStructuredTool<ZodObject<{ query: ZodOptional<...>; }, $strip>, { ...; }, { ...; }, string> | ... 10 more ... | DynamicStructuredTool<...>' is not assignable to parameter of type 'DynamicStructuredTool<ZodObject<{}, $strip>, Record<string, never>, Record<string, never>, string> | DynamicStructuredTool<ZodObject<...>, { ...; }, { ...; }, string> | ... 11 more ... | DynamicStructuredTool<...>'.
+  Type 'DynamicStructuredTool<ZodObject<{ title: ZodString; }, $strip>, { title: string; }, { title: string; }, string>' is not assignable to type 'DynamicStructuredTool<ZodObject<{}, $strip>, Record<string, never>, Record<string, never>, string> | DynamicStructuredTool<ZodObject<...>, { ...; }, { ...; }, string> | ... 11 more ... | DynamicStructuredTool<...>'.
+    Type 'DynamicStructuredTool<ZodObject<{ title: ZodString; }, $strip>, { title: string; }, { title: string; }, string>' is not assignable to type 'DynamicStructuredTool<ZodObject<{}, $strip>, Record<string, never>, Record<string, never>, string>'.
+      Property 'title' is missing in type 'Record<string, never>' but required in type '{ title: string; }'.
+
+[0m [90m 159 |[39m     [36mconst[39m tools [33m=[39m [[33m...[39madsTools[33m,[39m [33m...[39mmetaTools[33m,[39m write_todos_tool[33m,[39m task_tool[33m,[39m read_evicted_tool][33m;[39m
+ [90m 160 |[39m     [36mif[39m (sheetRequested) {
+[31m[1m>[22m[39m[90m 161 |[39m         tools[33m.[39mpush([33m...[39msheetsTools)[33m;[39m
+ [90m     |[39m                    [31m[1m^[22m[39m
+ [90m 162 |[39m     }
+ [90m 163 |[39m
+ [90m 164 |[39m     [36mconst[39m uniqueToolsMap [33m=[39m [36mnew[39m [33mMap[39m()[33m;[39m[0m
+Next.js build worker exited with code: 1 and signal: null

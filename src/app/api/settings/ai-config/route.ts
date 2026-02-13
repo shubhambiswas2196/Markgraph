@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
             exists: !!apiKeyPref,
             maskedKey: apiKeyPref ? `${apiKeyPref.value.slice(0, 10)}...${apiKeyPref.value.slice(-4)}` : null,
-            selectedModel: modelPref?.value || 'xiaomi/mimo-v2-flash:free',
+            selectedModel: modelPref?.value || 'x-ai/grok-4.1-fast',
             updatedAt: apiKeyPref?.updatedAt || null
         });
 

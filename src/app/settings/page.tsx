@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 
 interface UserData {
+    id?: number;
     firstName: string;
     lastName: string;
     email: string;
@@ -26,7 +27,7 @@ interface AIConfig {
 }
 
 // Available AI Models
-const DEFAULT_MODEL = 'xiaomi/mimo-v2-flash:free';
+const DEFAULT_MODEL = 'x-ai/grok-4.1-fast';
 
 export default function SettingsPage() {
     const [user, setUser] = useState<UserData | null>(null);
@@ -46,14 +47,55 @@ export default function SettingsPage() {
     const router = useRouter();
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-            fetchTokenStatus();
-            fetchAiConfig();
-        } else {
-            router.push('/login');
-        }
+        let cancelled = false;
+
+        const init = async () => {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                try {
+                    const parsed = JSON.parse(storedUser);
+                    if (!cancelled) {
+                        setUser(parsed);
+                        fetchTokenStatus();
+                        fetchAiConfig();
+                    }
+                    return;
+                } catch (error) {
+                    console.error('Failed to parse stored user', error);
+                    localStorage.removeItem('user');
+                }
+            }
+
+            try {
+                const res = await fetch('/api/me');
+                if (!res.ok) {
+                    throw new Error('Not authenticated');
+                }
+                const data = await res.json();
+                const hydratedUser = {
+                    id: data.userId,
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email
+                };
+                localStorage.setItem('user', JSON.stringify(hydratedUser));
+                if (!cancelled) {
+                    setUser(hydratedUser);
+                    fetchTokenStatus();
+                    fetchAiConfig();
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    router.push('/login');
+                }
+            }
+        };
+
+        void init();
+
+        return () => {
+            cancelled = true;
+        };
     }, [router]);
 
     const fetchTokenStatus = async () => {
@@ -220,7 +262,7 @@ export default function SettingsPage() {
                             )}
                         </div>
                         <p style={{ fontSize: '14px', color: '#6B7280', marginBottom: '24px', lineHeight: '1.5' }}>
-                            Configure your OpenRouter API key.
+                            Configure your OpenRouter API key for the x-ai/grok-4.1-fast model.
                         </p>
 
                         {aiConfig?.exists && aiConfig.maskedKey && (

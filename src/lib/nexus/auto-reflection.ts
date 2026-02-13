@@ -11,7 +11,7 @@ export async function runAutomaticReflection() {
 
     try {
         // Get all active users
-        const users = await (prisma as any).user.findMany({
+        const users = await prisma.user.findMany({
             select: { id: true, email: true }
         });
 
@@ -26,7 +26,7 @@ export async function runAutomaticReflection() {
                 await reflectionAgent.reflectOnActions(user.id, '7 days');
 
                 // Learn from recent conversations
-                const recentConversations = await (prisma as any).conversation.findMany({
+                const recentConversations = await prisma.conversation.findMany({
                     where: { userId: user.id },
                     orderBy: { updatedAt: 'desc' },
                     take: 3

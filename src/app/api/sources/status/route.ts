@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
         const userId = await getUserIdFromRequest(request);
 
         // Check for Google OAuth token
-        const token = await (prisma as any).oAuthToken.findFirst({
+        const token = await prisma.oAuthToken.findFirst({
             where: {
                 userId: userId,
                 provider: 'google',
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         });
 
         // Get connected data sources
-        const sources = await (prisma as any).dataSource.findMany({
+        const sources = await prisma.dataSource.findMany({
             where: {
                 userId: userId,
                 status: 'active'
